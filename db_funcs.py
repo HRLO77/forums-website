@@ -177,7 +177,7 @@ def close():
 if __name__ == "__main__":
     start()
     start_backup()
-    if "y" in input("Perform database tests? (Y/N)"):
+    if "y" in input("Perform database tests? (Y/N)").lower():
         print(get_posts(), get_ips())
         add_ip("", True)
         print(is_blacklisted(""))
