@@ -18,7 +18,9 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: '3.x'
-    - name: Format files
+    - name: Install black formatter
       run:
         pip install black --upgrade
+    - name: Run black formatter
+      run:
         python -m black .
