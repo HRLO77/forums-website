@@ -1,4 +1,4 @@
-# This workflow will clear inject.sqlite3, backup.sqlite3 and database.sqlite3
+# This workload will format all .py files with black formatter.
 
 name: Format files
 
