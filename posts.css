@@ -1,0 +1,26 @@
+user_image{
+    height: 30px;width:30px;border-radius: 512px;margin-left:10px;margin-top:10px;
+}
+
+thing{
+    float:inline-start
+}
+
+post{
+    background-color:grey;
+        text-rendering: optimizeSpeed;
+        margin:50px;
+        border-radius: 15px;
+        border:5px;
+        border-style:solid;
+        color:black;
+        border-color:cadetblue;
+}
+.nav{
+    display:flex;
+    justify-content: center;
+    align-items:center;
+    height: 6vh;
+    background-color: teal;
+    font-family: 'Montserrat', sans-serif;
+}
