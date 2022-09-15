@@ -14,7 +14,9 @@ async def split(iter, num):
     return l
 
 
-async def make_post(id: int, title: str, content: str, date: str, shortened: bool=True):
+async def make_post(
+    id: int, title: str, content: str, date: str, shortened: bool = True
+):
     c = await split(content, 340)
     return f"""
 <a href="{WEBSITE}/post/{id}" style="text-decoration:none"><div style="background-color:black;
@@ -92,7 +94,7 @@ async def form(title: str = fastapi.Form(), content: str = fastapi.Form()):
     if is_inject(title) or is_inject(content):
         raise fastapi.HTTPException(404, "SQL INJECT DETECTED")
     if len(title) > 220:
-        return fastapi.HTTPException(413, 'TITLE MUST BE UNDER 220 CHARS')
+        return fastapi.HTTPException(413, "TITLE MUST BE UNDER 220 CHARS")
     returned = new_post(title, content, datetime.datetime.utcnow())
     return fastapi.responses.HTMLResponse(
         f"""
@@ -115,14 +117,14 @@ async def form(title: str = fastapi.Form(), content: str = fastapi.Form()):
 
 @app.get("/")
 async def root():
-    return fastapi.responses.HTMLResponse(f"""<!DOCTYPE html>
+    return fastapi.responses.HTMLResponse(
+        f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>tips.saltfleet.org</title>
-    
 </head>
 <body style="background:#030303;">
     <nav style="
@@ -140,7 +142,8 @@ async def root():
     </nav>
     <h1 style='margin-left:95vh;color:white;'>Root</h1>
 </body>
-</html>""")
+</html>"""
+    )
 
 
 @app.on_event("shutdown")
