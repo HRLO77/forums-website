@@ -156,8 +156,10 @@ def is_inject(query: str) -> bool:
         cur.executescript(query)
         cur.execute(query)
     except Exception as e:
+        update_inject()
         return False
     else:
+        update_inject()
         return True
 
 
