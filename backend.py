@@ -33,7 +33,7 @@ border-color:rgba(95, 158, 160, 0.46);">
         <p style="margin-left: 20px;font-family:sans-serif;font-size:smaller;">Posted on: {date} - ID: {id}</p>
     </div>
     <div style="margin-left:25px;font-size:smaller;">
-        <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p style="font-size:medium;color:cadet-blue;font-family:sans-serif;"><a href="{WEBSITE}/post/{id}">Read more...</a></p>' if len(c) > 5 else '')() if shortened else '</p><p>'.join(c)}</p>
+        <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p style="font-size:medium;font-family:sans-serif;"><a href="{WEBSITE}/post/{id}" style="text-decoration:none">Read more...</a></p>' if len(c) > 5 else '')() if shortened else '</p><p>'.join(c)}</p>
     </div>
 </div></a>"""
 
