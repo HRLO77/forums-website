@@ -18,7 +18,7 @@ def get_posts() -> list[tuple[int, str, str, str]]:
 
 def get_post(id: int) -> tuple[int, str, str, str]:
     """Returns tuple[str, str, str]. Representing a title, content and date."""
-    res = cursor.execute("SELECT id,title,content,date FROM posts WHERE id=?", [id])
+    res = cursor.execute("SELECT * FROM posts WHERE id=?", [id])
     return res.fetchone()
 
 
@@ -70,7 +70,7 @@ def new_post(
     cursor.execute("INSERT INTO posts VALUES (?, ?, ?, ?);", [id, title, content, date])
     update_inject()
     return cursor.execute(
-        "SELECT id,title,content,date,id FROM posts WHERE id=?;", [id]
+        "SELECT * FROM posts WHERE id=?;", [id]
     ).fetchone()
 
 
