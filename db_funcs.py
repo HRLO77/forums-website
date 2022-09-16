@@ -131,6 +131,7 @@ def update_post(
         "UPDATE posts SET id=?,title=?,content=?,date=? WHERE id=?",
         [id, title, content, date, id],
     )
+    update_inject()
     return get_post(id)
 
 
