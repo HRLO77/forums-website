@@ -94,7 +94,7 @@ async def form(title: str = fastapi.Form(), content: str = fastapi.Form()):
     if is_inject(title) or is_inject(content):
         raise fastapi.HTTPException(404, "SQL INJECT DETECTED")
     if len(title) > 220:
-        return fastapi.HTTPException(413, "TITLE MUST BE UNDER 220 CHARS")
+        raise fastapi.HTTPException(413, "TITLE MUST BE UNDER 220 CHARS")
     returned = new_post(title, content, datetime.datetime.utcnow())
     return fastapi.responses.HTMLResponse(
         f"""
