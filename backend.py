@@ -19,7 +19,7 @@ async def make_post(
 ):
     c = await split(content, 340)
     return f"""
-<a href="{WEBSITE}/post/{id}" style="text-decoration:none"><div style="background-color:black;
+<div style="background-color:black;
 text-rendering: optimizeSpeed;
 margin:50px;
 border-radius: 15px;
@@ -30,12 +30,12 @@ border-color:rgba(95, 158, 160, 0.46);">
     <div>
         <img src="{WEBSITE}/resource/user.jpeg" style="height: 30px;width:30px;border-radius: 512px;margin-left:15px;margin-top:15px;">
         <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:10px">{title}</p>
-        <p style="margin-left: 20px;font-family:sans-serif;font-size:smaller;">Posted on: {date} - ID: {id}</p>
+        <p style="margin-left: 20px;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
     </div>
     <div style="margin-left:25px;font-size:smaller;">
-        <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p style="font-size:medium;font-family:sans-serif;"><a href="{WEBSITE}/post/{id}" style="text-decoration:none">Read more...</a></p>' if len(c) > 5 else '')() if shortened else '</p><p>'.join(c)}</p>
+        <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>' if len(c) > 5 else '')() if shortened else '</p><p>'.join(c)}</p>
     </div>
-</div></a>"""
+</div>"""
 
 
 app = fastapi.FastAPI()

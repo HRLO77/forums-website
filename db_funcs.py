@@ -69,9 +69,7 @@ def new_post(
             break
     cursor.execute("INSERT INTO posts VALUES (?, ?, ?, ?);", [id, title, content, date])
     update_inject()
-    return cursor.execute(
-        "SELECT * FROM posts WHERE id=?;", [id]
-    ).fetchone()
+    return cursor.execute("SELECT * FROM posts WHERE id=?;", [id]).fetchone()
 
 
 def delete_ip(ip: str) -> tuple[str, int]:
