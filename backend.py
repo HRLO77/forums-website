@@ -2,6 +2,10 @@ import fastapi
 from db_funcs import *  # let the chaos ensue
 import datetime
 import os
+import slowapi
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
+from slowapi import util
 
 WEBSITE = "http://127.0.0.1:8000"
 
@@ -38,11 +42,15 @@ border-color:rgba(95, 158, 160, 0.46);">
 </div>"""
 
 
+limiter = slowapi.Limiter(key_func=util.get_remote_address)
 app = fastapi.FastAPI()
+app.state.limiter = limiter
+
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 @app.middleware("http")
-async def evaluate_ip(request, call_next):
+async def evaluate_ip(request: fastapi.Request, call_next):
     if is_blacklisted(str(request.client.host)):
         raise fastapi.HTTPException(404, "BLACKLISTED CLIENT ADDRESS")
     else:
@@ -50,7 +58,8 @@ async def evaluate_ip(request, call_next):
 
 
 @app.get("/new")
-async def new():
+@limiter.limit('60/minute')
+async def new(request: fastapi.Request):
     return fastapi.responses.HTMLResponse(
         f"""
 <!DOCTYPE html>
@@ -86,11 +95,12 @@ async def new():
       </form>
 </body>
 </html>"""
-    )
+)
 
 
 @app.post("/form")
-async def form(title: str = fastapi.Form(), content: str = fastapi.Form()):
+@limiter.limit('10/minute')
+async def form(request: fastapi.Request,title: str = fastapi.Form(), content: str = fastapi.Form()):
     if is_inject(title) or is_inject(content):
         raise fastapi.HTTPException(404, "SQL INJECT DETECTED")
     if len(title) > 220:
@@ -116,7 +126,8 @@ async def form(title: str = fastapi.Form(), content: str = fastapi.Form()):
 
 
 @app.get("/")
-async def root():
+@limiter.limit('60/minute')
+async def root(request: fastapi.Request):
     return fastapi.responses.HTMLResponse(
         f"""<!DOCTYPE html>
 <html lang="en">
@@ -152,7 +163,8 @@ async def shutdown():
 
 
 @app.get("/posts")
-async def posts():
+@limiter.limit('60/minute')
+async def posts(request: fastapi.Request):
     page = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -191,7 +203,8 @@ async def fetch_resource(resource: str):
 
 
 @app.get("/post/{post}")
-async def post(post: int):
+@limiter.limit('60/minute')
+async def post(request: fastapi.Request,post: int):
     page = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
