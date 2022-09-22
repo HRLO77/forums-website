@@ -3,6 +3,8 @@ import difflib
 import os
 import sys
 import inspect
+import re
+import builtins
 
 os.chdir("..")
 sys.path.append(os.getcwd())
@@ -27,7 +29,8 @@ def parse_and_lookup(s: str):
     try:
         return globals()[i[1]]
     except KeyError:
-        print("Function does not exit.")
+        print("Function does not exist.")
+        print('Closest functions are - ', ', '.join(difflib.get_close_matches(i[1], [v[0] for v in globals().items()])))
         return None
 
 
@@ -50,13 +53,19 @@ while True:
             if lookup is None:
                 continue
             try:
-                args = lookup[2:]
+                args = i.removeprefix('--command').split()[1:]
             except Exception:
                 args = []
-            print(lookup(*args))
+            try:
+                print(lookup(*args))
+            except Exception as e:
+                print('Error:', e)
             continue
         else:
-            print(cursor.execute(i).fetchall())
+            try:
+                print(cursor.execute(i).fetchall())
+            except Exception as e:
+                print('Error:', e)
 
     except KeyboardInterrupt:
         print("Admin session finished.")
