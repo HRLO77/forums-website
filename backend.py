@@ -15,6 +15,7 @@ async def split(iter, num):
     l = []
     for i in iter[::num]:
         l.append(iter[c * num : (c + 1) * num])
+        c+=1
     return l
 
 
