@@ -52,7 +52,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 @app.middleware("http")
 async def evaluate_ip(request: fastapi.Request, call_next):
     if is_blacklisted(str(request.client.host)):
-        raise fastapi.HTTPException(404, "BLACKLISTED CLIENT ADDRESS")
+        raise fastapi.HTTPException(403, "BLACKLISTED CLIENT ADDRESS")
     else:
         return await call_next(request)
 
@@ -102,7 +102,7 @@ async def new(request: fastapi.Request):
 @limiter.limit('10/minute')
 async def form(request: fastapi.Request,title: str = fastapi.Form(), content: str = fastapi.Form()):
     if is_inject(title) or is_inject(content):
-        raise fastapi.HTTPException(404, "SQL INJECT DETECTED")
+        raise fastapi.HTTPException(403, "SQL INJECT DETECTED")
     if len(title) > 220:
         raise fastapi.HTTPException(413, "TITLE MUST BE UNDER 220 CHARS")
     content=content.replace('\\n', '\n').replace('\\t', '\t')
