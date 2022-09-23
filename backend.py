@@ -1,7 +1,8 @@
 import fastapi
 from db_funcs import *  # let the chaos ensue
 import datetime
-import os
+import numpy as np
+from urwid.str_util import get_width
 import slowapi
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
@@ -22,7 +23,8 @@ async def split(iter, num):
 async def make_post(
     id: int, title: str, content: str, date: str, shortened: bool = True
 ):
-    c = await split(content, 340)
+        
+    c = await split(content, 110)
     return f"""
 <div style="background-color:black;
 text-rendering: optimizeSpeed;
@@ -106,7 +108,6 @@ async def form(request: fastapi.Request,title: str = fastapi.Form(), content: st
         raise fastapi.HTTPException(403, "SQL INJECT DETECTED")
     if len(title) > 220:
         raise fastapi.HTTPException(413, "TITLE MUST BE UNDER 220 CHARS")
-    content=content.replace('\\n', '\n').replace('\\t', '\t')
     returned = new_post(title, content, datetime.datetime.utcnow())
     return fastapi.responses.HTMLResponse(
         f"""
