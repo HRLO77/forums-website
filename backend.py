@@ -1,8 +1,6 @@
 import fastapi
 from db_funcs import *  # let the chaos ensue
 import datetime
-import numpy as np
-from urwid.str_util import get_width
 import slowapi
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
