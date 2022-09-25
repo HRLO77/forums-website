@@ -10,6 +10,15 @@ INJECT = "./inject.sqlite3"
 cursor = sqlite3.connect(DATABASE)
 
 
+def back(to: str):
+    '''Backups the main database to the database fp provided.'''
+    to: sqlite3.Connection = sqlite3.connect(to)
+    cursor.backup(to)
+    to.commit()
+    to.close()
+    del to
+    
+
 def get_posts() -> list[tuple[int, str, str, str]]:
     """Returns list[tuple[str, str, str]]. Representing a title, content and date."""
     res = cursor.execute("SELECT * FROM posts")
@@ -29,9 +38,7 @@ def start():
         in input("Continuing will restart database.sqlite3, proceed? (Y/N): ").lower()
     ):
         if "y" in input("Backup current state? (Y/N): ").lower():
-            with open(DATABASE, "rb") as db:
-                with open(BACKUP, "wb") as w:
-                    w.write(db.read())
+            back(BACKUP)
         cursor.execute("DROP TABLE IF EXISTS posts;").execute(
             "DROP TABLE IF EXISTS ips;"
         ).execute(
@@ -48,9 +55,8 @@ def start():
 
 def update_inject():
     """Updates the inject database to check if a query is an inject. Should be run after updating the main database."""
-    with open(DATABASE, "rb") as db:
-        with open(INJECT, "wb") as inj:
-            inj.write(db.read())
+    cursor.commit()
+    back(INJECT)
     # print('Started inject testing database.')
 
 

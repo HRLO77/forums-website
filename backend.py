@@ -5,24 +5,36 @@ import slowapi
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 from slowapi import util
+import string
 
 WEBSITE = "http://127.0.0.1:8000"
 
 
-async def split(iter, num):
-    c = 0
+async def split(iter):
+    largest = {'@', '#', '%', '&', '$', }
+    large = {'k', 'm', 'n', 'b', 'c', 'x', 'z', 'd', 's', 'a', 'o', 'e', ' ', 'g'}
+    small = {i for i in string.printable if i not in large or not i in largest}
     l = []
-    for i in iter[::num]:
-        l.append(iter[c * num : (c + 1) * num])
-        c+=1
+    cur = 0
+    s = ''
+    for char in iter:
+        cur += int(char.lower() in large)*2 + int(char.lower() in small) + int(char.lower() in largest)*2.5
+        if cur <= 360:
+            s += char
+        else:
+            l.append(s)
+            s=''
+            cur=0
+    l.append(s)
     return l
 
 
 async def make_post(
     id: int, title: str, content: str, date: str, shortened: bool = True
 ):
-        
-    c = await split(content, 110)
+    # print(content)
+    c = await split(content)
+    # print(c)
     return f"""
 <div style="background-color:black;
 text-rendering: optimizeSpeed;
@@ -106,6 +118,16 @@ async def form(request: fastapi.Request,title: str = fastapi.Form(), content: st
         raise fastapi.HTTPException(403, "SQL INJECT DETECTED")
     if len(title) > 220:
         raise fastapi.HTTPException(413, "TITLE MUST BE UNDER 220 CHARS")
+    tmp = []
+    for char in title:
+        if char.isprintable():
+            tmp.append(char)
+    title = ''.join(tmp)
+    tmp = []
+    for char in content:
+        if char.isprintable():
+            tmp.append(char)
+    content = ''.join(tmp)
     returned = new_post(title, content, datetime.datetime.utcnow())
     return fastapi.responses.HTMLResponse(
         f"""
