@@ -18,8 +18,8 @@ async def split(iter):
     cur = 0
     s = ''
     for char in iter:
-        cur += int(char.lower() in large)*2 + int(char.lower() in small) + int(char.lower() in largest)*2.5
-        if cur <= 360:
+        cur += int(char.lower() in large)*2 + int(char.lower() in small)*1.5 + int(char.lower() in largest)*2.5
+        if cur <= 430:
             s += char
         else:
             l.append(s)
