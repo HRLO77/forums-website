@@ -118,16 +118,8 @@ async def form(request: fastapi.Request,title: str = fastapi.Form(), content: st
         raise fastapi.HTTPException(403, "SQL INJECT DETECTED")
     if len(title) > 220:
         raise fastapi.HTTPException(413, "TITLE MUST BE UNDER 220 CHARS")
-    tmp = []
-    for char in title:
-        if char.isprintable():
-            tmp.append(char)
-    title = ''.join(tmp)
-    tmp = []
-    for char in content:
-        if char.isprintable():
-            tmp.append(char)
-    content = ''.join(tmp)
+    title = "".join(i for i in title if i.is_printable())
+    content = "".join(i for i in content if i.is_printable())
     returned = new_post(title, content, datetime.datetime.utcnow())
     return fastapi.responses.HTMLResponse(
         f"""
