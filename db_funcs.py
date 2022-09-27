@@ -3,6 +3,7 @@ import asyncio
 import typing
 import datetime
 import random
+import ast
 
 DATABASE = "./database.sqlite3"
 BACKUP = "./backup.sqlite3"
@@ -19,16 +20,18 @@ def back(to: str):
     del to
     
 
-def get_posts() -> list[tuple[int, str, str, str]]:
-    """Returns list[tuple[str, str, str]]. Representing a title, content and date."""
+def get_posts() -> list[tuple[int, str, str, str, set[str], set[str]]]:
+    """Returns list[tuple[str, str, str, set[str], set[str]]]. Representing a title, content date, upvotes, and downvotes"""
     res = cursor.execute("SELECT * FROM posts")
-    return res.fetchall()
+    res = res.fetchall()
+    return [(*((i)[0:4]), ast.literal_eval(i[-2]), ast.literal_eval(i[-1])) for i in res]
 
 
-def get_post(id: int) -> tuple[int, str, str, str]:
-    """Returns tuple[str, str, str]. Representing a title, content and date."""
+def get_post(id: int) -> tuple[int, str, str, str, set[str], set[str]]:
+    """Returns tuple[str, str, str]. Representing a title, content date, upvotes, and downvotes."""
     res = cursor.execute("SELECT * FROM posts WHERE id=?", [id])
-    return res.fetchone()
+    res = res.fetchone()
+    return (*((res)[0:4]), ast.literal_eval(res[-2]), ast.literal_eval(res[-1]))
 
 
 def start():
@@ -42,7 +45,7 @@ def start():
         cursor.execute("DROP TABLE IF EXISTS posts;").execute(
             "DROP TABLE IF EXISTS ips;"
         ).execute(
-            "CREATE TABLE posts(id INT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL);"
+            "CREATE TABLE posts(id INT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
         ).execute(
             "CREATE TABLE ips(ip TEXT PRIMARY KEY NOT NULL, blacklisted INT);"
         )
@@ -69,11 +72,13 @@ def new_post(
     while True:
         try:
             get_post(id)
-        except sqlite3.DataError:
+        except Exception as e:
+            if isinstance(e, TypeError):
+                break
             id = random.randint(0, 2147483646)
         else:
             break
-    cursor.execute("INSERT INTO posts VALUES (?, ?, ?, ?);", [id, title, content, date])
+    cursor.execute("INSERT INTO posts VALUES (?, ?, ?, ?, ?, ?);", [id, title, content, date, '{}', '{}'])
     update_inject()
     return cursor.execute("SELECT * FROM posts WHERE id=?;", [id]).fetchone()
 
@@ -113,7 +118,7 @@ def get_ip(ip: str) -> tuple[str, int]:
     return res
 
 
-def delete_post(id: int) -> tuple[int, str, str, str]:
+def delete_post(id: int) -> tuple[int, str, str, str, set[str], set[str]]:
     """Removes a post by it's id from the database, returns the database row as a tuple before deletion."""
     post = get_post(id)
     cursor.execute("DELETE FROM posts WHERE id=?;", [id])
@@ -127,13 +132,13 @@ async def to_thread(func: typing.Callable, *args, **kwargs):
 
 
 def update_post(
-    id: int, title: str, content: str, date: datetime.datetime | str
-) -> tuple[int, str, str, str]:
+    id: int, title: str, content: str, date: datetime.datetime | str, upvotes: set[str], downvotes: set[str]
+) -> tuple[int, str, str, str, set[str], set[str]]:
     """Updates a post with the arguments provided."""
     date = date.strftime("%Y-%m-%d") if isinstance(date, datetime.datetime) else date
     cursor.execute(
-        "UPDATE posts SET id=?,title=?,content=?,date=? WHERE id=?",
-        [id, title, content, date, id],
+        "UPDATE posts SET id=?,title=?,content=?,date=?, upvotes=?, downvotes=? WHERE id=?",
+        [id, title, content, date, str(upvotes), str(downvotes), id],
     )
     update_inject()
     return get_post(id)
@@ -144,7 +149,7 @@ def start_backup():
     if "y" in input("Restart backup database (Y/N)?: ").lower():
         tmp = sqlite3.connect(BACKUP)
         tmp.execute("DROP TABLE IF EXISTS posts;").execute(
-            "CREATE TABLE posts(id INT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL);"
+            "CREATE TABLE posts(id INT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
         ).execute("DROP TABLE IF EXISTS ips;").execute(
             "CREATE TABLE ips(ip TEXT PRIMARY KEY NOT NULL, blacklisted INT);"
         )
@@ -166,7 +171,36 @@ def is_inject(query: str) -> bool:
     else:
         update_inject()
         return True
-
+    
+def add_upvote(ip: str, id: int):
+    '''Adds a upvote to post id provided.'''
+    post = get_post(id)
+    update_post(id, post[1], post[2], post[3], {*post[4], ip}, post[5])
+    
+def remove_upvote(ip: str, id: int):
+    '''Removes an upvote from the id provided.'''
+    post = get_post(id)
+    upvotes = post[-2]
+    try:
+        upvotes.remove(ip)
+    except Exception:
+        pass
+    update_post(id, post[1], post[2], post[3], upvotes, post[5])
+    
+def add_downvote(ip: str, id: int):
+    '''Adds a downvote to post id provided.'''
+    post = get_post(id)
+    update_post(id, post[1], post[2], post[3], post[4], {*post[5], ip})
+    
+def remove_downvote(ip: str, id: int):
+    '''Removes an downvote from the id provided.'''
+    post = get_post(id)
+    downvotes = post[-1]
+    try:
+        downvotes.remove(ip)
+    except Exception:
+        pass
+    update_post(id, post[1], post[2], post[3], post[4], downvotes)
 
 def is_blacklisted(ip: str) -> bool:
     """Returns whether the IP in question is blacklisted or not."""
@@ -196,7 +230,11 @@ if __name__ == "__main__":
         # snip
         new_post("", "", datetime.datetime.now())
         print(*get_posts())
-        update_post(get_posts()[0][0], "t", "t", datetime.datetime.utcnow())
+        update_post(get_posts()[0][0], "t", "t", datetime.datetime.utcnow(), {'192.168.2.1',}, {'127.0.0.1'})
+        print(*get_posts())
+        add_upvote('rick roll', get_posts()[0][0])
+        print(*get_posts())
+        add_downvote('rick roll', get_posts()[0][0])
         print(*get_posts())
         delete_post(get_posts()[0][0])
         print(*get_posts())

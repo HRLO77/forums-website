@@ -6,6 +6,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 from slowapi import util
 import string
+import json
 
 WEBSITE = "http://127.0.0.1:8000"
 
@@ -30,7 +31,7 @@ async def split(iter):
 
 
 async def make_post(
-    id: int, title: str, content: str, date: str, shortened: bool = True
+    id: int, title: str, content: str, date: str, upvotes: set[str], downvotes: set[str], shortened: bool = True
 ):
     # print(content)
     c = await split(content)
@@ -48,6 +49,9 @@ border-color:rgba(95, 158, 160, 0.46);">
         <img src="{WEBSITE}/resource/user.jpeg" style="height: 30px;width:30px;border-radius: 512px;margin-left:15px;margin-top:15px;">
         <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:10px">{title}</p>
         <p style="margin-left: 20px;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
+            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="upvote({str(id).strip()});">↑</button>
+            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="downvote({str(id).strip()});">↓</button>
+            <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:10px">{len(upvotes)-len(downvotes)} points</p>
     </div>
     <div style="margin-left:25px;font-size:smaller;">
         <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>' if len(c) > 5 else '')() if shortened else '</p><p>'.join(c)}</p>
@@ -68,7 +72,40 @@ async def evaluate_ip(request: fastapi.Request, call_next):
         raise fastapi.HTTPException(403, "BLACKLISTED CLIENT ADDRESS")
     else:
         return await call_next(request)
+    
+@app.post('/upvote')
+@limiter.limit('10/minute')
+async def upvote(request: fastapi.Request, id = fastapi.Body()):
+    try:
+        id = json.loads(id.decode())['id']
+        if (str(request.client.host) in get_post(id)[-1]) and str(request.client.host) in get_post(id)[-2]: # both
+            remove_downvote(str(request.client.host), id)
+            remove_upvote(str(request.client.host), id)
+        elif (str(request.client.host) in get_post(id)[-1]) and not(str(request.client.host) in get_post(id)[-2]): # downvote no upvote
+            raise fastapi.HTTPException(409, {'detail': 'CLIENT HAS DOWNVOTED'})
+        elif not(str(request.client.host) in get_post(id)[-1]) and (str(request.client.host) in get_post(id)[-2]): # no downvote and 1 upvote
+            remove_upvote(str(request.client.host), id)
+        elif not(str(request.client.host) in get_post(id)[-1]) and not(str(request.client.host) in get_post(id)[-2]): # no downvote and no upvote
+            add_upvote(str(request.client.host), id)
+    except Exception as e:
+        raise fastapi.exceptions.HTTPException(500, e)
 
+@app.post('/downvote')
+@limiter.limit('10/minute')
+async def downvote(request: fastapi.Request, id: bytes = fastapi.Body()):
+    try:
+        id = json.loads(id.decode())['id']
+        if (str(request.client.host) in get_post(id)[-1]) and str(request.client.host) in get_post(id)[-2]: # both
+            remove_downvote(str(request.client.host), id)
+            remove_upvote(str(request.client.host), id)
+        elif (str(request.client.host) in get_post(id)[-1]) and not(str(request.client.host) in get_post(id)[-2]): # downvote no upvote
+            remove_downvote(str(request.client.host), id)
+        elif not(str(request.client.host) in get_post(id)[-1]) and (str(request.client.host) in get_post(id)[-2]): # no downvote and 1 upvote
+            raise fastapi.HTTPException(409, {'detail': 'CLIENT HAS UPVOTED'})
+        elif not(str(request.client.host) in get_post(id)[-1]) and not(str(request.client.host) in get_post(id)[-2]): # no downvote and no upvote
+            add_downvote(str(request.client.host), id)
+    except Exception as e:
+        raise fastapi.exceptions.HTTPException(500, e)
 
 @app.get("/new")
 @limiter.limit('60/minute')
@@ -118,8 +155,8 @@ async def form(request: fastapi.Request,title: str = fastapi.Form(), content: st
         raise fastapi.HTTPException(403, "SQL INJECT DETECTED")
     if len(title) > 220:
         raise fastapi.HTTPException(413, "TITLE MUST BE UNDER 220 CHARS")
-    title = "".join(i for i in title if i.is_printable())
-    content = "".join(i for i in content if i.is_printable())
+    title = "".join(i for i in title if i.isprintable())
+    content = "".join(i for i in content if i.isprintable())
     returned = new_post(title, content, datetime.datetime.utcnow())
     return fastapi.responses.HTMLResponse(
         f"""
@@ -190,6 +227,8 @@ async def posts(request: fastapi.Request):
     
 </head>
 <body style="background:#030303;">
+    <script>let upvote = function(id){{fetch('{WEBSITE}/upvote', {{method: 'POST',body: JSON.stringify( {{"id": id}} )}} ).then(response => response.json()).then(response => {{''}})}}</script>
+    <script>let downvote = function(id) {{fetch('{WEBSITE}/downvote', {{method: 'POST',body: JSON.stringify( {{"id": id}} )}} ).then( response => response.json() ).then( response => {{''}} )}}</script>
     <div style="background: #030303">
         <nav style="
         display:flex;
@@ -202,10 +241,11 @@ async def posts(request: fastapi.Request):
             <div>
                 <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:80px;">All posts</button></a>
                 <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
+            
             </div>
         </nav>"""
-    for id, title, content, date in get_posts():
-        page += await make_post(id, title, content, date)
+    for args in get_posts():
+        page += await make_post(*args)
     page += """    </div></body>
 </body>
 </html>"""
@@ -230,6 +270,8 @@ async def post(request: fastapi.Request,post: int):
     
 </head>
 <body style="background:#030303;">
+    <script>let upvote = function(id){{fetch('{WEBSITE}/upvote', {{method: 'POST',body: JSON.stringify( {{"id": id}} )}} ).then( response => response.json() ).then( response => {{''}} )}}</script>
+    <script>let downvote = function(id) {{fetch('{WEBSITE}/downvote', {{method: 'POST',body: JSON.stringify( {{"id": id}} )}} ).then( response => response.json() ).then( response => {{''}} )}}</script>
     <div style="background: #030303">
         <nav style="
         display:flex;
@@ -244,8 +286,11 @@ async def post(request: fastapi.Request,post: int):
                 <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
             </div>
         </nav>"""
-    p = get_post(post)
-    page += await make_post(p[0], p[1], p[2], p[3], False)
+    try:
+        p: tuple[int, str, str, str, set[str], set[str]] = get_post(post)
+    except Exception:
+        raise fastapi.HTTPException(404, {'detail': 'POST NOT FOUND'})
+    page += await make_post(*p, False)
     page += """    </div></body>
 </body>
 </html>"""
