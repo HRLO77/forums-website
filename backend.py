@@ -184,10 +184,10 @@ async def new(request: fastapi.Request):
       </form>
 </body>
 </html>"""
-    )
+)
 
 @app.get('/points')
-@limiter.limit('20/minute')
+@limiter.limit('60/minute')
 async def points(request: fastapi.Request, post_id: int):
     try:
         p = get_post(post_id)
@@ -277,9 +277,7 @@ async def posts(request: fastapi.Request):
     
 </head>
 <body style="background:#030303;">
-    <script>let upvote = function(id){{fetch('{WEBSITE}/upvote', {{method: 'POST',body: JSON.stringify( {{"id": id}} )}} ).then(response => response.json()).then(response => {{''}})}}</script>
-    <script>let downvote = function(id) {{fetch('{WEBSITE}/downvote', {{method: 'POST',body: JSON.stringify( {{"id": id}} )}} ).then( response => response.json() ).then( response => {{''}} )}}</script>
-    <script>let points = function(id, i){{fetch('{WEBSITE}/points?post_id='+id, {{method: 'GET'}}  ).then(response => response.json()).then(response => document.getElementById(i).innerHTML = response + ' points')}}</script>
+    <script src='{WEBSITE}/resource/script.js'></script>
     <div style="background: #030303">
         <nav style="
         display:flex;
@@ -321,9 +319,7 @@ async def post(request: fastapi.Request, post: int):
     
 </head>
 <body style="background:#030303;">
-    <script>let upvote = function(id){{fetch('{WEBSITE}/upvote', {{method: 'POST',body: JSON.stringify( {{"id": id}} )}} ).then( response => response.json() ).then( response => {{''}} )}}</script>
-    <script>let downvote = function(id) {{fetch('{WEBSITE}/downvote', {{method: 'POST',body: JSON.stringify( {{"id": id}} )}} ).then( response => response.json() ).then( response => {{''}} )}}</script>
-    <script>let points = function(id, i){{fetch('{WEBSITE}/points?post_id='+id, {{method: 'GET'}} ).then(response => response.json()).then(response => document.getElementById(i).innerHTML = response + ' points')}}</script>
+    <script src='{WEBSITE}/resource/script.js'></script>
     <div style="background: #030303">
         <nav style="
         display:flex;
