@@ -7,6 +7,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi import util
 import string
 import json
+import random
 
 WEBSITE = "http://127.0.0.1:8000"
 
@@ -49,9 +50,8 @@ async def make_post(
     downvotes: set[str],
     shortened: bool = True,
 ):
-    # print(content)
+    rand = random.randint(0, 99999999999999999999)
     c = await split(content)
-    # print(c)
     return f"""
 <div style="background-color:black;
 text-rendering: optimizeSpeed;
@@ -65,9 +65,9 @@ border-color:rgba(95, 158, 160, 0.46);">
         <img src="{WEBSITE}/resource/user.jpeg" style="height: 30px;width:30px;border-radius: 512px;margin-left:15px;margin-top:15px;">
         <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:10px">{title}</p>
         <p style="margin-left: 20px;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
-            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="upvote({str(id).strip()});">↑</button>
-            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="downvote({str(id).strip()});">↓</button>
-            <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:10px">{len(upvotes)-len(downvotes)} points</p>
+            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="upvote({str(id).strip()});points({str(id).strip()}, '{rand}');">↑</button>
+            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="downvote({str(id).strip()});points({str(id).strip()}, '{rand}');">↓</button>
+            <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:10px" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
     </div>
     <div style="margin-left:25px;font-size:smaller;">
         <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>' if len(c) > 5 else '')() if shortened else '</p><p>'.join(c)}</p>
@@ -92,7 +92,7 @@ async def evaluate_ip(request: fastapi.Request, call_next):
 
 @app.post("/upvote")
 @limiter.limit("10/minute")
-async def upvote(request: fastapi.Request, id=fastapi.Body()):
+async def upvote(request: fastapi.Request, id: bytes=fastapi.Body()):
     try:
         id = json.loads(id.decode())["id"]
         if (str(request.client.host) in get_post(id)[-1]) and str(
@@ -186,6 +186,15 @@ async def new(request: fastapi.Request):
 </html>"""
     )
 
+@app.get('/points')
+@limiter.limit('20/minute')
+async def points(request: fastapi.Request, post_id: int):
+    try:
+        p = get_post(post_id)
+    except Exception:
+        raise fastapi.HTTPException(404, "POST NOT FOUND")
+    else:
+        return fastapi.responses.PlainTextResponse(str(len(p[4])-len(p[5])))
 
 @app.post("/form")
 @limiter.limit("10/minute")
@@ -270,6 +279,7 @@ async def posts(request: fastapi.Request):
 <body style="background:#030303;">
     <script>let upvote = function(id){{fetch('{WEBSITE}/upvote', {{method: 'POST',body: JSON.stringify( {{"id": id}} )}} ).then(response => response.json()).then(response => {{''}})}}</script>
     <script>let downvote = function(id) {{fetch('{WEBSITE}/downvote', {{method: 'POST',body: JSON.stringify( {{"id": id}} )}} ).then( response => response.json() ).then( response => {{''}} )}}</script>
+    <script>let points = function(id, i){{fetch('{WEBSITE}/points?post_id='+id, {{method: 'GET'}}  ).then(response => response.json()).then(response => document.getElementById(i).innerHTML = response + ' points')}}</script>
     <div style="background: #030303">
         <nav style="
         display:flex;
@@ -313,6 +323,7 @@ async def post(request: fastapi.Request, post: int):
 <body style="background:#030303;">
     <script>let upvote = function(id){{fetch('{WEBSITE}/upvote', {{method: 'POST',body: JSON.stringify( {{"id": id}} )}} ).then( response => response.json() ).then( response => {{''}} )}}</script>
     <script>let downvote = function(id) {{fetch('{WEBSITE}/downvote', {{method: 'POST',body: JSON.stringify( {{"id": id}} )}} ).then( response => response.json() ).then( response => {{''}} )}}</script>
+    <script>let points = function(id, i){{fetch('{WEBSITE}/points?post_id='+id, {{method: 'GET'}} ).then(response => response.json()).then(response => document.getElementById(i).innerHTML = response + ' points')}}</script>
     <div style="background: #030303">
         <nav style="
         display:flex;
