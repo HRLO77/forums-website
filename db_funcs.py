@@ -12,19 +12,21 @@ cursor = sqlite3.connect(DATABASE)
 
 
 def back(to: str):
-    '''Backups the main database to the database fp provided.'''
+    """Backups the main database to the database fp provided."""
     to: sqlite3.Connection = sqlite3.connect(to)
     cursor.backup(to)
     to.commit()
     to.close()
     del to
-    
+
 
 def get_posts() -> list[tuple[int, str, str, str, set[str], set[str]]]:
     """Returns list[tuple[str, str, str, set[str], set[str]]]. Representing a title, content date, upvotes, and downvotes"""
     res = cursor.execute("SELECT * FROM posts")
     res = res.fetchall()
-    return [(*((i)[0:4]), ast.literal_eval(i[-2]), ast.literal_eval(i[-1])) for i in res]
+    return [
+        (*((i)[0:4]), ast.literal_eval(i[-2]), ast.literal_eval(i[-1])) for i in res
+    ]
 
 
 def get_post(id: int) -> tuple[int, str, str, str, set[str], set[str]]:
@@ -78,7 +80,10 @@ def new_post(
             id = random.randint(0, 2147483646)
         else:
             break
-    cursor.execute("INSERT INTO posts VALUES (?, ?, ?, ?, ?, ?);", [id, title, content, date, '{}', '{}'])
+    cursor.execute(
+        "INSERT INTO posts VALUES (?, ?, ?, ?, ?, ?);",
+        [id, title, content, date, "{}", "{}"],
+    )
     update_inject()
     return cursor.execute("SELECT * FROM posts WHERE id=?;", [id]).fetchone()
 
@@ -132,7 +137,12 @@ async def to_thread(func: typing.Callable, *args, **kwargs):
 
 
 def update_post(
-    id: int, title: str, content: str, date: datetime.datetime | str, upvotes: set[str], downvotes: set[str]
+    id: int,
+    title: str,
+    content: str,
+    date: datetime.datetime | str,
+    upvotes: set[str],
+    downvotes: set[str],
 ) -> tuple[int, str, str, str, set[str], set[str]]:
     """Updates a post with the arguments provided."""
     date = date.strftime("%Y-%m-%d") if isinstance(date, datetime.datetime) else date
@@ -171,14 +181,16 @@ def is_inject(query: str) -> bool:
     else:
         update_inject()
         return True
-    
+
+
 def add_upvote(ip: str, id: int):
-    '''Adds a upvote to post id provided.'''
+    """Adds a upvote to post id provided."""
     post = get_post(id)
     update_post(id, post[1], post[2], post[3], {*post[4], ip}, post[5])
-    
+
+
 def remove_upvote(ip: str, id: int):
-    '''Removes an upvote from the id provided.'''
+    """Removes an upvote from the id provided."""
     post = get_post(id)
     upvotes = post[-2]
     try:
@@ -186,14 +198,16 @@ def remove_upvote(ip: str, id: int):
     except Exception:
         pass
     update_post(id, post[1], post[2], post[3], upvotes, post[5])
-    
+
+
 def add_downvote(ip: str, id: int):
-    '''Adds a downvote to post id provided.'''
+    """Adds a downvote to post id provided."""
     post = get_post(id)
     update_post(id, post[1], post[2], post[3], post[4], {*post[5], ip})
-    
+
+
 def remove_downvote(ip: str, id: int):
-    '''Removes an downvote from the id provided.'''
+    """Removes an downvote from the id provided."""
     post = get_post(id)
     downvotes = post[-1]
     try:
@@ -201,6 +215,7 @@ def remove_downvote(ip: str, id: int):
     except Exception:
         pass
     update_post(id, post[1], post[2], post[3], post[4], downvotes)
+
 
 def is_blacklisted(ip: str) -> bool:
     """Returns whether the IP in question is blacklisted or not."""
@@ -230,11 +245,20 @@ if __name__ == "__main__":
         # snip
         new_post("", "", datetime.datetime.now())
         print(*get_posts())
-        update_post(get_posts()[0][0], "t", "t", datetime.datetime.utcnow(), {'192.168.2.1',}, {'127.0.0.1'})
+        update_post(
+            get_posts()[0][0],
+            "t",
+            "t",
+            datetime.datetime.utcnow(),
+            {
+                "192.168.2.1",
+            },
+            {"127.0.0.1"},
+        )
         print(*get_posts())
-        add_upvote('rick roll', get_posts()[0][0])
+        add_upvote("rick roll", get_posts()[0][0])
         print(*get_posts())
-        add_downvote('rick roll', get_posts()[0][0])
+        add_downvote("rick roll", get_posts()[0][0])
         print(*get_posts())
         delete_post(get_posts()[0][0])
         print(*get_posts())

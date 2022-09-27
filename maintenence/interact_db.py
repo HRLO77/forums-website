@@ -30,7 +30,12 @@ def parse_and_lookup(s: str):
         return globals()[i[1]]
     except KeyError:
         print("Function does not exist.")
-        print('Closest functions are - ', ', '.join(difflib.get_close_matches(i[1], [v[0] for v in globals().items()])))
+        print(
+            "Closest functions are - ",
+            ", ".join(
+                difflib.get_close_matches(i[1], [v[0] for v in globals().items()])
+            ),
+        )
         return None
 
 
@@ -53,19 +58,19 @@ while True:
             if lookup is None:
                 continue
             try:
-                args = i.removeprefix('--command').split()[1:]
+                args = i.removeprefix("--command").split()[1:]
             except Exception:
                 args = []
             try:
                 print(lookup(*args))
             except Exception as e:
-                print('Error:', e)
+                print("Error:", e)
             continue
         else:
             try:
                 print(cursor.execute(i).fetchall())
             except Exception as e:
-                print('Error:', e)
+                print("Error:", e)
 
     except KeyboardInterrupt:
         print("Admin session finished.")

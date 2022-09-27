@@ -1,7 +1,7 @@
 # this is to be run on workflows to prevent accidental doxxing.
 from db_funcs import *
 
-tp = sqlite3.connect('../top_level.sqlite3')
+tp = sqlite3.connect("../top_level.sqlite3")
 cursor.backup(tp)
 tp.commit()
 tp.close()

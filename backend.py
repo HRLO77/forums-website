@@ -12,26 +12,42 @@ WEBSITE = "http://127.0.0.1:8000"
 
 
 async def split(iter):
-    largest = {'@', '#', '%', '&', '$', }
-    large = {'k', 'm', 'n', 'b', 'c', 'x', 'z', 'd', 's', 'a', 'o', 'e', ' ', 'g'}
+    largest = {
+        "@",
+        "#",
+        "%",
+        "&",
+        "$",
+    }
+    large = {"k", "m", "n", "b", "c", "x", "z", "d", "s", "a", "o", "e", " ", "g"}
     small = {i for i in string.printable if i not in large or not i in largest}
     l = []
     cur = 0
-    s = ''
+    s = ""
     for char in iter:
-        cur += int(char.lower() in large)*2 + int(char.lower() in small)*1.5 + int(char.lower() in largest)*2.5
+        cur += (
+            int(char.lower() in large) * 2
+            + int(char.lower() in small) * 1.5
+            + int(char.lower() in largest) * 2.5
+        )
         if cur <= 430:
             s += char
         else:
             l.append(s)
-            s=''
-            cur=0
+            s = ""
+            cur = 0
     l.append(s)
     return l
 
 
 async def make_post(
-    id: int, title: str, content: str, date: str, upvotes: set[str], downvotes: set[str], shortened: bool = True
+    id: int,
+    title: str,
+    content: str,
+    date: str,
+    upvotes: set[str],
+    downvotes: set[str],
+    shortened: bool = True,
 ):
     # print(content)
     c = await split(content)
@@ -72,43 +88,66 @@ async def evaluate_ip(request: fastapi.Request, call_next):
         raise fastapi.HTTPException(403, "BLACKLISTED CLIENT ADDRESS")
     else:
         return await call_next(request)
-    
-@app.post('/upvote')
-@limiter.limit('10/minute')
-async def upvote(request: fastapi.Request, id = fastapi.Body()):
+
+
+@app.post("/upvote")
+@limiter.limit("10/minute")
+async def upvote(request: fastapi.Request, id=fastapi.Body()):
     try:
-        id = json.loads(id.decode())['id']
-        if (str(request.client.host) in get_post(id)[-1]) and str(request.client.host) in get_post(id)[-2]: # both
+        id = json.loads(id.decode())["id"]
+        if (str(request.client.host) in get_post(id)[-1]) and str(
+            request.client.host
+        ) in get_post(id)[
+            -2
+        ]:  # both
             remove_downvote(str(request.client.host), id)
             remove_upvote(str(request.client.host), id)
-        elif (str(request.client.host) in get_post(id)[-1]) and not(str(request.client.host) in get_post(id)[-2]): # downvote no upvote
-            raise fastapi.HTTPException(409, {'detail': 'CLIENT HAS DOWNVOTED'})
-        elif not(str(request.client.host) in get_post(id)[-1]) and (str(request.client.host) in get_post(id)[-2]): # no downvote and 1 upvote
+        elif (str(request.client.host) in get_post(id)[-1]) and not (
+            str(request.client.host) in get_post(id)[-2]
+        ):  # downvote no upvote
+            raise fastapi.HTTPException(409, {"detail": "CLIENT HAS DOWNVOTED"})
+        elif not (str(request.client.host) in get_post(id)[-1]) and (
+            str(request.client.host) in get_post(id)[-2]
+        ):  # no downvote and 1 upvote
             remove_upvote(str(request.client.host), id)
-        elif not(str(request.client.host) in get_post(id)[-1]) and not(str(request.client.host) in get_post(id)[-2]): # no downvote and no upvote
+        elif not (str(request.client.host) in get_post(id)[-1]) and not (
+            str(request.client.host) in get_post(id)[-2]
+        ):  # no downvote and no upvote
             add_upvote(str(request.client.host), id)
     except Exception as e:
         raise fastapi.exceptions.HTTPException(500, e)
 
-@app.post('/downvote')
-@limiter.limit('10/minute')
+
+@app.post("/downvote")
+@limiter.limit("10/minute")
 async def downvote(request: fastapi.Request, id: bytes = fastapi.Body()):
     try:
-        id = json.loads(id.decode())['id']
-        if (str(request.client.host) in get_post(id)[-1]) and str(request.client.host) in get_post(id)[-2]: # both
+        id = json.loads(id.decode())["id"]
+        if (str(request.client.host) in get_post(id)[-1]) and str(
+            request.client.host
+        ) in get_post(id)[
+            -2
+        ]:  # both
             remove_downvote(str(request.client.host), id)
             remove_upvote(str(request.client.host), id)
-        elif (str(request.client.host) in get_post(id)[-1]) and not(str(request.client.host) in get_post(id)[-2]): # downvote no upvote
+        elif (str(request.client.host) in get_post(id)[-1]) and not (
+            str(request.client.host) in get_post(id)[-2]
+        ):  # downvote no upvote
             remove_downvote(str(request.client.host), id)
-        elif not(str(request.client.host) in get_post(id)[-1]) and (str(request.client.host) in get_post(id)[-2]): # no downvote and 1 upvote
-            raise fastapi.HTTPException(409, {'detail': 'CLIENT HAS UPVOTED'})
-        elif not(str(request.client.host) in get_post(id)[-1]) and not(str(request.client.host) in get_post(id)[-2]): # no downvote and no upvote
+        elif not (str(request.client.host) in get_post(id)[-1]) and (
+            str(request.client.host) in get_post(id)[-2]
+        ):  # no downvote and 1 upvote
+            raise fastapi.HTTPException(409, {"detail": "CLIENT HAS UPVOTED"})
+        elif not (str(request.client.host) in get_post(id)[-1]) and not (
+            str(request.client.host) in get_post(id)[-2]
+        ):  # no downvote and no upvote
             add_downvote(str(request.client.host), id)
     except Exception as e:
         raise fastapi.exceptions.HTTPException(500, e)
 
+
 @app.get("/new")
-@limiter.limit('60/minute')
+@limiter.limit("60/minute")
 async def new(request: fastapi.Request):
     return fastapi.responses.HTMLResponse(
         f"""
@@ -145,12 +184,14 @@ async def new(request: fastapi.Request):
       </form>
 </body>
 </html>"""
-)
+    )
 
 
 @app.post("/form")
-@limiter.limit('10/minute')
-async def form(request: fastapi.Request,title: str = fastapi.Form(), content: str = fastapi.Form()):
+@limiter.limit("10/minute")
+async def form(
+    request: fastapi.Request, title: str = fastapi.Form(), content: str = fastapi.Form()
+):
     if is_inject(title) or is_inject(content):
         raise fastapi.HTTPException(403, "SQL INJECT DETECTED")
     if len(title) > 220:
@@ -178,7 +219,7 @@ async def form(request: fastapi.Request,title: str = fastapi.Form(), content: st
 
 
 @app.get("/")
-@limiter.limit('60/minute')
+@limiter.limit("60/minute")
 async def root(request: fastapi.Request):
     return fastapi.responses.HTMLResponse(
         f"""<!DOCTYPE html>
@@ -215,7 +256,7 @@ async def shutdown():
 
 
 @app.get("/posts")
-@limiter.limit('60/minute')
+@limiter.limit("60/minute")
 async def posts(request: fastapi.Request):
     page = f"""<!DOCTYPE html>
 <html lang="en">
@@ -258,8 +299,8 @@ async def fetch_resource(resource: str):
 
 
 @app.get("/post/{post}")
-@limiter.limit('60/minute')
-async def post(request: fastapi.Request,post: int):
+@limiter.limit("60/minute")
+async def post(request: fastapi.Request, post: int):
     page = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -289,7 +330,7 @@ async def post(request: fastapi.Request,post: int):
     try:
         p: tuple[int, str, str, str, set[str], set[str]] = get_post(post)
     except Exception:
-        raise fastapi.HTTPException(404, {'detail': 'POST NOT FOUND'})
+        raise fastapi.HTTPException(404, {"detail": "POST NOT FOUND"})
     page += await make_post(*p, False)
     page += """    </div></body>
 </body>
