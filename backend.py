@@ -50,7 +50,7 @@ async def make_post(
     downvotes: set[str],
     shortened: bool = True,
 ):
-    rand = ''.join(random.sample(string.ascii_letters, k=32))
+    rand = ''.join(random.sample(string.ascii_letters, k=52))
     c = await split(content)
     return f"""
 <div style="background-color:black;
