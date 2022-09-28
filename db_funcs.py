@@ -171,9 +171,9 @@ def start_backup():
 def is_inject(query: str) -> bool:
     """Returns whether or not a string query is an sql inject (not always accurate)."""
     try:
+        update_inject()
         con = sqlite3.connect(INJECT)
         cur = con.cursor()
-        cur.executescript(query)
         cur.execute(query)
     except Exception as e:
         update_inject()
@@ -231,6 +231,7 @@ def close():
 
 
 if __name__ == "__main__":
+    print(is_inject('DROP TABLE posts;'))
     start()
     start_backup()
     if "y" in input("Perform database tests? (Y/N)").lower():
