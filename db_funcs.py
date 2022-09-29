@@ -4,6 +4,7 @@ import typing
 import datetime
 import random
 import ast
+import string
 
 DATABASE = "./database.sqlite3"
 BACKUP = "./backup.sqlite3"
@@ -20,7 +21,7 @@ def back(to: str):
     del to
 
 
-def get_posts() -> list[tuple[int, str, str, str, set[str], set[str]]]:
+def get_posts() -> list[tuple[str, str, str, str, set[str], set[str]]]:
     """Returns list[tuple[str, str, str, set[str], set[str]]]. Representing a title, content date, upvotes, and downvotes"""
     res = cursor.execute("SELECT * FROM posts")
     res = res.fetchall()
@@ -29,7 +30,7 @@ def get_posts() -> list[tuple[int, str, str, str, set[str], set[str]]]:
     ]
 
 
-def get_post(id: int) -> tuple[int, str, str, str, set[str], set[str]]:
+def get_post(id: str) -> tuple[str, str, str, str, set[str], set[str]]:
     """Returns tuple[str, str, str]. Representing a title, content date, upvotes, and downvotes."""
     res = cursor.execute("SELECT * FROM posts WHERE id=?", [id])
     res = res.fetchone()
@@ -47,7 +48,7 @@ def start():
         cursor.execute("DROP TABLE IF EXISTS posts;").execute(
             "DROP TABLE IF EXISTS ips;"
         ).execute(
-            "CREATE TABLE posts(id INT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
+            "CREATE TABLE posts(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
         ).execute(
             "CREATE TABLE ips(ip TEXT PRIMARY KEY NOT NULL, blacklisted INT);"
         )
@@ -67,17 +68,17 @@ def update_inject():
 
 def new_post(
     title: str, content: str, date: datetime.datetime | str
-) -> tuple[int, str, str, str]:
+) -> tuple[str, str, str, str]:
     """Creates a new post with provided data, returns the row in the database as a tuple."""
     date = date.strftime("%Y-%m-%d") if isinstance(date, datetime.datetime) else date
-    id = random.randint(0, 2147483646)
+    id = ''.join(random.sample(string.ascii_letters, k=52))
     while True:
         try:
             get_post(id)
         except Exception as e:
             if isinstance(e, TypeError):
                 break
-            id = random.randint(0, 2147483646)
+            id = ''.join(random.sample(string.ascii_letters, k=52))
         else:
             break
     cursor.execute(
@@ -123,7 +124,7 @@ def get_ip(ip: str) -> tuple[str, int]:
     return res
 
 
-def delete_post(id: int) -> tuple[int, str, str, str, set[str], set[str]]:
+def delete_post(id: str) -> tuple[str, str, str, str, set[str], set[str]]:
     """Removes a post by it's id from the database, returns the database row as a tuple before deletion."""
     post = get_post(id)
     cursor.execute("DELETE FROM posts WHERE id=?;", [id])
@@ -137,13 +138,13 @@ async def to_thread(func: typing.Callable, *args, **kwargs):
 
 
 def update_post(
-    id: int,
+    id: str,
     title: str,
     content: str,
     date: datetime.datetime | str,
     upvotes: set[str],
     downvotes: set[str],
-) -> tuple[int, str, str, str, set[str], set[str]]:
+) -> tuple[str, str, str, str, set[str], set[str]]:
     """Updates a post with the arguments provided."""
     date = date.strftime("%Y-%m-%d") if isinstance(date, datetime.datetime) else date
     cursor.execute(
@@ -159,7 +160,7 @@ def start_backup():
     if "y" in input("Restart backup database (Y/N)?: ").lower():
         tmp = sqlite3.connect(BACKUP)
         tmp.execute("DROP TABLE IF EXISTS posts;").execute(
-            "CREATE TABLE posts(id INT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
+            "CREATE TABLE posts(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
         ).execute("DROP TABLE IF EXISTS ips;").execute(
             "CREATE TABLE ips(ip TEXT PRIMARY KEY NOT NULL, blacklisted INT);"
         )
@@ -183,13 +184,13 @@ def is_inject(query: str) -> bool:
         return True
 
 
-def add_upvote(ip: str, id: int):
+def add_upvote(ip: str, id: str):
     """Adds a upvote to post id provided."""
     post = get_post(id)
     update_post(id, post[1], post[2], post[3], {*post[4], ip}, post[5])
 
 
-def remove_upvote(ip: str, id: int):
+def remove_upvote(ip: str, id: str):
     """Removes an upvote from the id provided."""
     post = get_post(id)
     upvotes = post[-2]
@@ -200,13 +201,13 @@ def remove_upvote(ip: str, id: int):
     update_post(id, post[1], post[2], post[3], upvotes, post[5])
 
 
-def add_downvote(ip: str, id: int):
+def add_downvote(ip: str, id: str):
     """Adds a downvote to post id provided."""
     post = get_post(id)
     update_post(id, post[1], post[2], post[3], post[4], {*post[5], ip})
 
 
-def remove_downvote(ip: str, id: int):
+def remove_downvote(ip: str, id: str):
     """Removes an downvote from the id provided."""
     post = get_post(id)
     downvotes = post[-1]

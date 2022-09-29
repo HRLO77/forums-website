@@ -65,8 +65,8 @@ border-color:rgba(95, 158, 160, 0.46);">
         <img src="{WEBSITE}/resource/user.jpeg" style="height: 30px;width:30px;border-radius: 512px;margin-left:15px;margin-top:15px;">
         <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:10px">{title}</p>
         <p style="margin-left: 20px;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
-            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="upvote({str(id).strip()});points({str(id).strip()}, '{rand}');">↑</button>
-            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="downvote({str(id).strip()});points({str(id).strip()}, '{rand}');">↓</button>
+            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="upvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}')">↑</button>
+            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="downvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}')">↓</button>
             <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:10px" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
     </div>
     <div style="margin-left:25px;font-size:smaller;">
@@ -188,7 +188,7 @@ async def new(request: fastapi.Request):
 
 @app.get('/points')
 @limiter.limit('60/minute')
-async def points(request: fastapi.Request, post_id: int):
+async def points(request: fastapi.Request, post_id: str):
     try:
         p = get_post(post_id)
     except Exception:
@@ -308,7 +308,7 @@ async def fetch_resource(resource: str):
 
 @app.get("/post/{post}")
 @limiter.limit("60/minute")
-async def post(request: fastapi.Request, post: int):
+async def post(request: fastapi.Request, post: str):
     page = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
