@@ -3,8 +3,7 @@ import difflib
 import os
 import sys
 import inspect
-import re
-import builtins
+import asyncio
 
 os.chdir("..")
 sys.path.append(os.getcwd())
@@ -39,40 +38,45 @@ def parse_and_lookup(s: str):
         return None
 
 
-while True:
-    try:
-        i = input(
-            "Enter --command <*args> to run a function and provide arguments, --doc <function> to list arguments for a function and docs, or enter anything else (run as an SQL command on the db): "
-        )
-        if i == "cls" or i == "clear":
-            os.system("cls||clear")
-            continue
-        if i.startswith("--doc"):
-            lookup = parse_and_lookup(i)
-            if lookup is None:
+async def main():
+    await start_conn()
+    while True:
+        try:
+            i = input(
+                "Enter --command <*args> to run a function and provide arguments, --doc <function> to list arguments for a function and docs, or enter anything else (run as an SQL command on the db): "
+            )
+            if i == "cls" or i == "clear":
+                os.system("cls||clear")
                 continue
-            print(fmt_function(lookup))
-            continue
-        if i.startswith("--command"):
-            lookup = parse_and_lookup(i)
-            if lookup is None:
+            if i.startswith("--doc"):
+                lookup = parse_and_lookup(i)
+                if lookup is None:
+                    continue
+                print(fmt_function(lookup))
                 continue
-            try:
-                args = i.removeprefix("--command").split()[1:]
-            except Exception:
-                args = []
-            try:
-                print(lookup(*args))
-            except Exception as e:
-                print("Error:", e)
-            continue
-        else:
-            try:
-                print(cursor.execute(i).fetchall())
-            except Exception as e:
-                print("Error:", e)
+            if i.startswith("--command"):
+                lookup = parse_and_lookup(i)
+                if lookup is None:
+                    continue
+                try:
+                    args = i.removeprefix("--command").split()[1:]
+                except Exception:
+                    args = []
+                try:
+                    print(await lookup(*args))
+                except Exception as e:
+                    print("Error:", e)
+                continue
+            else:
+                try:
+                    print(await (await cursor.execute(i)).fetchall())
+                except Exception as e:
+                    print("Error:", e)
 
-    except KeyboardInterrupt:
-        print("Admin session finished.")
-        break
-close()
+        except KeyboardInterrupt:
+            print("Admin session finished.")
+            break
+    await close()
+
+
+asyncio.run(main())
