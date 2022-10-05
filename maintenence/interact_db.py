@@ -52,7 +52,10 @@ async def main():
                 lookup = parse_and_lookup(i)
                 if lookup is None:
                     continue
-                print(fmt_function(lookup))
+                try:
+                    print(fmt_function(lookup))
+                except Exception as e:
+                    print(e)
                 continue
             if i.startswith("--command"):
                 lookup = parse_and_lookup(i)
@@ -68,10 +71,9 @@ async def main():
                     print("Error:", e)
                 continue
             else:
-                try:
-                    print(await (await cursor.execute(i)).fetchall())
-                except Exception as e:
-                    print("Error:", e)
+                res = await (await cursor.cursor()).execute(i)
+                print(await res.fetchall())
+
 
         except KeyboardInterrupt:
             print("Admin session finished.")
@@ -79,4 +81,6 @@ async def main():
     await close()
 
 
-asyncio.run(main())
+loop = asyncio.new_event_loop()
+task = loop.create_task(main())
+loop.run

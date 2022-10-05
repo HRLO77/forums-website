@@ -7,12 +7,15 @@
     <title>New post</title>
 </head>
 <body style="background-color: #030303;">
-    <form action="http://127.0.0.1:8000/post" method="post">
+    <form action="http://127.0.0.1:8000/post" method="post" enctype="multipart/form-data">
         <div style="margin-left: 150px;margin-top:50px;color:white;border-radius:10px"><label for="title">Title:</label></div>    
         <div style="margin-left: 100px;margin-top:50px;color:white;border-radius:10px"><input type="text" id="title" name="title"><br><br></div>
         <div style="margin-left: 150px;margin-top:50px;color:white;border-radius:10px"><label for="content">Content:</label></div>
         <div style="margin-left: 100px;margin-top:50px;color:white;border-radius:10px"><input type="text" id="content" name="content"><br><br></div>
-        <div style="margin-left: 100px;margin-top:50px;color:white;border-radius:10px"><input type="submit" value="Submit"></div>
+        <div style="margin-left: 150px;margin-top:50px;color:white;border-radius:10px"><label for="files">File:</label></div>
+        <div style="margin-left: 100px;margin-top:50px;color:white;border-radius:10px"><input type="file" id="files" name="files"><br><br></div>
+
+        <div style="margin-left: 100px;margin-top:50px;color:white;border-radius:10px"><input type="submit" value="Submit" ></div>
       </form>
 </body>
 </html>

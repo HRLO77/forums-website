@@ -241,6 +241,18 @@ async def remove_downvote(ip: str, id: str):
         pass
     return await update_post(id, post[1], post[2], post[3], post[4], post[5], downvotes)
 
+async def purge_ip(ip: str) -> list[tuple[str, str, str, str, str, set[str], set[str]]]:
+    '''Removes all posts from ip provided.'''
+    posts = await (await cursor.execute('SELECT * FROM posts WHERE ip=?', ip)).fetchall()
+    await cursor.execute('DELETE FROM posts WHERE ip=?', [ip])
+    return [tuple(i) for i in posts]
+
+async def ban_author(id: str) -> str:
+    '''IP bans the author of a post id provided, returns the authors IP.'''
+    post = await get_post(id)
+    ip = post[-3]
+    await update_ip(ip, True)
+    return ip
 
 async def is_blacklisted(ip: str) -> bool:
     """Returns whether the IP in question is blacklisted or not."""
