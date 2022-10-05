@@ -74,7 +74,6 @@ async def main():
                 res = await (await cursor.cursor()).execute(i)
                 print(await res.fetchall())
 
-
         except KeyboardInterrupt:
             print("Admin session finished.")
             break
@@ -83,4 +82,4 @@ async def main():
 
 loop = asyncio.new_event_loop()
 task = loop.create_task(main())
-loop.run
+loop.run_until_complete(task)

@@ -27,20 +27,20 @@ async def back(to: str):
     del to
 
 
-async def get_posts() -> list[tuple[str, str, str, str, str, set[str], set[str]]]:
-    """Returns list[tuple[str, str, str, set[str], set[str]]]. Representing a title, content, date, IP, upvotes, and downvotes"""
+async def get_posts() -> list[tuple[str, str, str, str, str, str, set[str], set[str]]]:
+    """Returns list[tuple[str, str, str, set[str], set[str]]]. Representing a title, content, date, file path, IP, upvotes, and downvotes"""
     res = await cursor.execute("SELECT * FROM posts")
     res = await res.fetchall()
     return [
-        (*((i)[0:5]), ast.literal_eval(i[-2]), ast.literal_eval(i[-1])) for i in res
+        (*((i)[0:6]), ast.literal_eval(i[-2]), ast.literal_eval(i[-1])) for i in res
     ]
 
 
-async def get_post(id: str) -> tuple[str, str, str, str, str, set[str], set[str]]:
-    """Returns tuple[str, str, str]. Representing a title, content, date, IP, upvotes, and downvotes."""
+async def get_post(id: str) -> tuple[str, str, str, str, str, str, set[str], set[str]]:
+    """Returns tuple[str, str, str]. Representing a title, content, date, IP, file path, upvotes, and downvotes."""
     res = await cursor.execute("SELECT * FROM posts WHERE id=?", [id])
     res = await res.fetchone()
-    return (*((res)[0:5]), ast.literal_eval(res[-2]), ast.literal_eval(res[-1]))
+    return (*((res)[0:6]), ast.literal_eval(res[-2]), ast.literal_eval(res[-1]))
 
 
 async def start():
@@ -57,7 +57,7 @@ async def start():
                     "DROP TABLE IF EXISTS ips;"
                 )
             ).execute(
-                "CREATE TABLE posts(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, ip TEXT NOT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
+                "CREATE TABLE posts(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, fp TEXT NULL, ip TEXT NOT NULL,  upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
             )
         ).execute("CREATE TABLE ips(ip TEXT PRIMARY KEY NOT NULL, blacklisted INT);")
 
@@ -75,8 +75,12 @@ async def update_inject():
 
 
 async def new_post(
-    title: str, content: str, date: datetime.datetime | str, ip: str
-) -> tuple[str, str, str, str, str, set[str], set[str]]:
+    title: str,
+    content: str,
+    date: datetime.datetime | str,
+    ip: str,
+    fp: str | None = None,
+) -> tuple[str, str, str, str, str, str, set[str], set[str]]:
     """Creates a new post with provided data, returns the row in the database as a tuple."""
     date = date.strftime("%Y-%m-%d") if isinstance(date, datetime.datetime) else date
     id = "".join(random.sample(string.ascii_letters, k=52))
@@ -90,8 +94,8 @@ async def new_post(
         else:
             break
     await cursor.execute(
-        "INSERT INTO posts VALUES (?, ?, ?, ?, ?, ?, ?);",
-        [id, title, content, date, ip, "{}", "{}"],
+        "INSERT INTO posts VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
+        [id, title, content, date, fp, ip, "{}", "{}"],
     )
     await update_inject()
     return await get_post(id)
@@ -140,7 +144,9 @@ async def get_ip(ip: str) -> tuple[str, int]:
     return res
 
 
-async def delete_post(id: str) -> tuple[str, str, str, str, str, set[str], set[str]]:
+async def delete_post(
+    id: str,
+) -> tuple[str, str, str, str, str, str, set[str], set[str]]:
     """Removes a post by it's id from the database, returns the database row as a tuple before deletion."""
     post = await get_post(id)
     await cursor.execute("DELETE FROM posts WHERE id=?;", [id])
@@ -161,12 +167,13 @@ async def update_post(
     ip: str,
     upvotes: set[str],
     downvotes: set[str],
-) -> tuple[str, str, str, str, str, set[str], set[str]]:
+    fp: str | None = None,
+) -> tuple[str, str, str, str, str, str, set[str], set[str]]:
     """Updates a post with the arguments provided."""
     date = date.strftime("%Y-%m-%d") if isinstance(date, datetime.datetime) else date
     await cursor.execute(
-        "UPDATE posts SET id=?,title=?,content=?,date=?, ip=?, upvotes=?, downvotes=? WHERE id=?",
-        [id, title, content, date, ip, str(upvotes), str(downvotes), id],
+        "UPDATE posts SET id=?,title=?,content=?,date=?,fp=?,ip=?, upvotes=?, downvotes=? WHERE id=?",
+        [id, title, content, date, fp, ip, str(upvotes), str(downvotes), id],
     )
     await update_inject()
     return await get_post(id)
@@ -182,7 +189,7 @@ async def start_backup():
                     "DROP TABLE IF EXISTS ips;"
                 )
             ).execute(
-                "CREATE TABLE posts(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, ip TEXT NOT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
+                "CREATE TABLE posts(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, fp TEXT NULL, ip TEXT NOT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
             )
         ).execute("CREATE TABLE ips(ip TEXT PRIMARY KEY NOT NULL, blacklisted INT);")
         await cursor.commit()
@@ -208,7 +215,7 @@ async def add_upvote(ip: str, id: str):
     """Adds a upvote to post id provided."""
     post = await get_post(id)
     return await update_post(
-        id, post[1], post[2], post[3], post[4], {*post[5], ip}, post[6]
+        id, post[1], post[2], post[3], post[5], {*post[-2], ip}, post[-1], post[4]
     )
 
 
@@ -220,14 +227,16 @@ async def remove_upvote(ip: str, id: str):
         upvotes.remove(ip)
     except Exception:
         pass
-    return await update_post(id, post[1], post[2], post[3], post[4], upvotes, post[6])
+    return await update_post(
+        id, post[1], post[2], post[3], post[5], upvotes, post[7], post[4]
+    )
 
 
 async def add_downvote(ip: str, id: str):
     """Adds a downvote to post id provided."""
     post = await get_post(id)
     return await update_post(
-        id, post[1], post[2], post[3], post[4], post[5], {*post[6], ip}
+        id, post[1], post[2], post[3], post[5], post[6], {*post[7], ip}, post[4]
     )
 
 
@@ -239,20 +248,27 @@ async def remove_downvote(ip: str, id: str):
         downvotes.remove(ip)
     except Exception:
         pass
-    return await update_post(id, post[1], post[2], post[3], post[4], post[5], downvotes)
+    return await update_post(
+        id, post[1], post[2], post[3], post[5], post[-2], downvotes, post[4]
+    )
+
 
 async def purge_ip(ip: str) -> list[tuple[str, str, str, str, str, set[str], set[str]]]:
-    '''Removes all posts from ip provided.'''
-    posts = await (await cursor.execute('SELECT * FROM posts WHERE ip=?', ip)).fetchall()
-    await cursor.execute('DELETE FROM posts WHERE ip=?', [ip])
+    """Removes all posts from ip provided."""
+    posts = await (
+        await cursor.execute("SELECT * FROM posts WHERE ip=?", ip)
+    ).fetchall()
+    await cursor.execute("DELETE FROM posts WHERE ip=?", [ip])
     return [tuple(i) for i in posts]
 
+
 async def ban_author(id: str) -> str:
-    '''IP bans the author of a post id provided, returns the authors IP.'''
+    """IP bans the author of a post id provided, returns the authors IP."""
     post = await get_post(id)
     ip = post[-3]
     await update_ip(ip, True)
     return ip
+
 
 async def is_blacklisted(ip: str) -> bool:
     """Returns whether the IP in question is blacklisted or not."""
@@ -295,16 +311,24 @@ if __name__ == "__main__":
                     "192.168.2.1",
                 },
                 {"127.0.0.1"},
+                "test.txt",
             )
             print(*await get_posts())
             await add_upvote("rick roll", (await get_posts())[0][0])
             print(*await get_posts())
             await add_downvote("rick roll", (await get_posts())[0][0])
             print(*await get_posts())
+            await remove_upvote("rick roll", (await get_posts())[0][0])
+            print(*await get_posts())
+            await remove_downvote("rick roll", (await get_posts())[0][0])
+            print(*await get_posts())
             await delete_post((await get_posts())[0][0])
             print(*await get_posts())
+            # snip
             print(await is_inject("SELECT * FROM posts"))
             print(await is_inject("hello!"))
-            sys.exit()
+            await close()
 
-    asyncio.run(main())
+    loop = asyncio.new_event_loop()
+    task = loop.create_task(main())
+    loop.run_until_complete(task)

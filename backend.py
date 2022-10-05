@@ -8,6 +8,7 @@ from slowapi import util
 import string
 import json
 import random
+import os
 
 WEBSITE = "http://127.0.0.1:8000"
 
@@ -46,6 +47,7 @@ async def make_post(
     title: str,
     content: str,
     date: str,
+    file: str,
     ip: str,
     upvotes: set[str],
     downvotes: set[str],
@@ -71,7 +73,7 @@ border-color:rgba(95, 158, 160, 0.46);">
             <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:10px" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
     </div>
     <div style="margin-left:25px;font-size:smaller;">
-        <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>' if len(c) > 5 else '')() if shortened else '</p><p>'.join(c)}</p>
+        <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file}</a></p>' if file is not None else '')()}</p>
     </div>
 </div>"""
 
@@ -176,16 +178,19 @@ async def new(request: fastapi.Request):
     font-family: 'Montserrat', sans-serif;
     ">
         <div>
-            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:80px;">All posts</button></a>
+            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:100px;">Policy</button></a>
+            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
         </div>
     </nav>
     <h1 style='color:white;margin-left:100px;'>New post</h1>
-    <form action="{WEBSITE}/form" method="post">
+    <form action="{WEBSITE}/form" method="post" enctype="multipart/form-data">
         <div style="margin-left: 150px;margin-top:50px;color:white;border-radius:10px"><label for="title">Title:</label></div>    
         <div style="margin-left: 100px;margin-top:50px;color:white;border-radius:10px"><input type="text" id="title" name="title"><br><br></div>
         <div style="margin-left: 150px;margin-top:50px;color:white;border-radius:10px"><label for="content">Content:</label></div>
         <div style="margin-left: 100px;margin-top:50px;color:white;border-radius:10px"><input type="text" id="content" name="content"><br><br></div>
+        <div style="margin-left: 150px;margin-top:50px;color:white;border-radius:10px"><label for="file">File:</label></div>
+        <div style="margin-left: 100px;margin-top:50px;color:white;border-radius:10px"><input type="file" id="file" name="file"><br><br></div>
         <div style="margin-left: 100px;margin-top:50px;color:white;border-radius:10px"><input type="submit" value="Submit"></div>
       </form>
 </body>
@@ -207,10 +212,28 @@ async def points(request: fastapi.Request, post_id: str):
 @app.post("/form")
 @limiter.limit("10/minute")
 async def form(
-    request: fastapi.Request, title: str = fastapi.Form(), content: str = fastapi.Form()
+    request: fastapi.Request,
+    title: str = fastapi.Form(),
+    content: str = fastapi.Form(),
+    file: fastapi.UploadFile = fastapi.File(),
 ):
     if (await is_inject(title)) or (await is_inject(content)):
         raise fastapi.HTTPException(403, "SQL INJECT DETECTED")
+    id: str = ""
+    if file.filename != "":
+        contents = await file.read()
+        if sum(len(f"{str(bin(i)).replace('b', '')}") for i in contents) > 1073741824:
+            raise fastapi.HTTPException(413, "FILE MUST BE UNDER 1 GIGABYTE")
+        else:
+            id = "".join(random.sample(string.ascii_letters, k=52))
+            while True:
+                if os.path.isfile(f"{id}_{file.filename}"):
+                    id = "".join(random.sample(string.ascii_letters, k=52))
+                else:
+                    break
+            open(f"{id}_{file.filename}", "x")
+            with open(f"{id}_{file.filename}", "wb") as f:
+                f.write(contents)
     if len(title) > 220:
         raise fastapi.HTTPException(413, "TITLE MUST BE UNDER 220 CHARS")
     title = "".join(
@@ -229,9 +252,18 @@ async def form(
         .replace('"', "&quot;")
         if i.isprintable()
     )
-    returned = await new_post(
-        title, content, datetime.datetime.utcnow(), str(request.client.host)
-    )
+    if file.filename == "":
+        returned = await new_post(
+            title, content, datetime.datetime.utcnow(), str(request.client.host)
+        )
+    else:
+        returned = await new_post(
+            title,
+            content,
+            datetime.datetime.utcnow(),
+            str(request.client.host),
+            f"{id}_{file.filename}",
+        )
     return fastapi.responses.HTMLResponse(
         f"""
 <!DOCTYPE html>
@@ -273,11 +305,12 @@ async def root(request: fastapi.Request):
     font-family: 'Montserrat', sans-serif;
     ">
         <div>
-            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:80px;">All posts</button></a>
+            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:100px;">Policy</button></a>
+            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
         </div>
     </nav>
-    <h1 style='margin-left:95vh;color:white;'>Root</h1>
+    <h1 style='margin-left:92vh;color:white;'>Root</h1>
 </body>
 </html>"""
     )
@@ -313,9 +346,9 @@ async def posts(request: fastapi.Request):
         font-family: 'Montserrat', sans-serif;
         ">
             <div>
-                <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:80px;">All posts</button></a>
-                <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
-            
+            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:100px;">Policy</button></a>
+            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">All posts</button></a>
+            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
             </div>
         </nav>"""
     for args in await get_posts():
@@ -328,7 +361,7 @@ async def posts(request: fastapi.Request):
 
 @app.get("/resource/{resource}")
 async def fetch_resource(resource: str):
-    if resource.endswith("sqlite3"):
+    if resource in {DATABASE, INJECT, BACKUP}:
         raise fastapi.HTTPException(403, "CANNOT ACCESS DATABASE.")
     else:
         return fastapi.responses.FileResponse(resource)
@@ -358,12 +391,15 @@ async def post(request: fastapi.Request, post: str):
         font-family: 'Montserrat', sans-serif;
         ">
             <div>
-                <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:80px;">All posts</button></a>
-                <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
+            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:100px;">Policy</button></a>
+            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">All posts</button></a>
+            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
             </div>
         </nav>"""
     try:
-        p: tuple[str, str, str, str, str, set[str], set[str]] = await get_post(post)
+        p: tuple[str, str, str, str, str, str, set[str], set[str]] = await get_post(
+            post
+        )
     except Exception:
         raise fastapi.HTTPException(404, {"detail": "POST NOT FOUND"})
     page += await make_post(*p, False)
