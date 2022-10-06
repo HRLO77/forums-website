@@ -222,7 +222,7 @@ async def form(
     id: str = ""
     if file.filename != "":
         contents = await file.read()
-        if sum(len(f"{str(bin(i)).replace('b', '')}") for i in contents) > 1073741824:
+        if sum(len(f"{f'{bin(i)}'.replace('b', '')}") for i in contents) > 1073741824:
             raise fastapi.HTTPException(413, "FILE MUST BE UNDER 1 GIGABYTE")
         else:
             id = "".join(random.sample(string.ascii_letters, k=52))
@@ -231,6 +231,7 @@ async def form(
                     id = "".join(random.sample(string.ascii_letters, k=52))
                 else:
                     break
+            if len(await split(f"{id}_{file.filename}")) > 1:raise fastapi.HTTPException(413, "FILENAME TOO LARGE")
             open(f"{id}_{file.filename}", "x")
             with open(f"{id}_{file.filename}", "wb") as f:
                 f.write(contents)
