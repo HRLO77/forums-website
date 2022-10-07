@@ -362,7 +362,7 @@ async def posts(request: fastapi.Request):
 
 @app.get("/resource/{resource}")
 async def fetch_resource(resource: str):
-    if resource in {DATABASE, INJECT, BACKUP}:
+    if resource.strip() in {DATABASE, INJECT, BACKUP}:
         raise fastapi.HTTPException(403, "CANNOT ACCESS DATABASE.")
     else:
         return fastapi.responses.FileResponse(resource)
