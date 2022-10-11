@@ -21,7 +21,7 @@ async def rm_files_ids(ids: list[str] | tuple[str] | set[str], fps_passed: bool=
     ids = {i[-4] for i in await get_posts() if i[0] in ids} if not(fps_passed) else ids
     for i in ids:
         if isinstance(i, str):
-            if os.path.isfile(i) and not(re.match(r'$([a-zA-Z]{52})', i) is None):os.remove(i)
+            if os.path.exists(i) and not(re.match(r'([a-zA-Z]{52})$', i) is None):os.remove(i)
         
 async def start_conn():
     global cursor
@@ -30,7 +30,7 @@ async def start_conn():
     posts = await get_posts()
     files = {i[-4] for i in posts}
     for file in glob.glob('./*'):
-        if not(file in files) and not(re.match(r'$([a-zA-Z]{52})', file) is None):
+        if not(file in files) and not(re.match(r'([a-zA-Z]{52})$', file) is None):
             os.remove(file)
     
 
@@ -165,8 +165,8 @@ async def delete_post(
 ) -> tuple[str, str, str, str, str, str, set[str], set[str]]:
     """Removes a post by it's id from the database, returns the database row as a tuple before deletion."""
     post = await get_post(id)
-    await rm_files_ids({post[-4]}, True)
     await cursor.execute("DELETE FROM posts WHERE id=?;", [id])
+    await rm_files_ids({post[-4]}, True)
     await update_inject()
     return post
 
@@ -366,12 +366,9 @@ if __name__ == "__main__":
             print(*await get_posts())
             print((await get_posts())[-1][0])
             await ban_author((await get_posts())[-1][0])
-            try:
-                post = await get_post((await get_posts())[-1][0])
-            except TypeError:
-                pass
-            else:
-                print('Author CONST was not banned.')
+            post = await get_post((await get_posts())[-1][0])
+            if post is not None:
+                print('WARNING: Author CONST was not banned.')
             print(await is_blacklisted('CONST'))
             print(*await get_posts(), *await get_ips())
             await purge_ip('129.168.2.1')
