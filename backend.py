@@ -73,7 +73,7 @@ border-color:rgba(95, 158, 160, 0.46);">
             <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:10px" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
     </div>
     <div style="margin-left:25px;font-size:smaller;">
-        <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file}</a></p>' if file is not None else '')()}</p>
+        <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')()}</p>
     </div>
 </div>"""
 
@@ -222,7 +222,7 @@ async def form(
     id: str = ""
     if file.filename != "":
         contents = await file.read()
-        if sum(len(f"{str(bin(i)).replace('b', '')}") for i in contents) > 1073741824:
+        if sum(len(f"{f'{bin(i)}'.replace('b', '')}") for i in contents) > 1073741824*8:
             raise fastapi.HTTPException(413, "FILE MUST BE UNDER 1 GIGABYTE")
         else:
             id = "".join(random.sample(string.ascii_letters, k=52))
@@ -231,6 +231,7 @@ async def form(
                     id = "".join(random.sample(string.ascii_letters, k=52))
                 else:
                     break
+            if len(await split(f"{id}_{file.filename}")) > 1:raise fastapi.HTTPException(413, "FILENAME TOO LARGE")
             open(f"{id}_{file.filename}", "x")
             with open(f"{id}_{file.filename}", "wb") as f:
                 f.write(contents)
@@ -317,7 +318,7 @@ async def root(request: fastapi.Request):
 
 
 @app.on_event("shutdown")
-async def shutdown():
+async def shutdown(*args, **kwargs):
     await close()
 
 
@@ -361,10 +362,10 @@ async def posts(request: fastapi.Request):
 
 @app.get("/resource/{resource}")
 async def fetch_resource(resource: str):
-    if resource in {DATABASE, INJECT, BACKUP}:
+    if resource.strip() in {DATABASE, INJECT, BACKUP}:
         raise fastapi.HTTPException(403, "CANNOT ACCESS DATABASE.")
     else:
-        return fastapi.responses.FileResponse(resource)
+        return fastapi.responses.FileResponse(resource.strip())
 
 
 @app.get("/post/{post}")
