@@ -8,8 +8,7 @@ import ast
 import string
 import aiosqlite
 import re
-
-os.path.exists = lambda file: f'.\\{file}' in glob.glob('./*')
+import pickle
 
 DATABASE = "./database.sqlite3"
 BACKUP = "./backup.sqlite3"
@@ -22,10 +21,12 @@ async def rm_files_ids(ids: list[str] | tuple[str] | set[str], fps_passed: bool=
     ids = {i[-4] for i in await get_posts() if i[0] in ids} if not(fps_passed) else ids
     for i in ids:
         if isinstance(i, str):
-            print(i, 'TEST 71239')
-            if os.path.exists(i) and not(re.match('([a-zA-Z]{52})$', i) is None):#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
-                print('requirements met', i)
-                os.remove(i)
+            # print(f'.\\{i}', 'TEST 71239')
+            match = re.match('([a-zA-Z]{52})', i)
+            if os.path.isfile(i) and match!=None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
+                if match.span()[0]==0:
+                    print('requirements met', i)
+                    os.remove(i)
                 
         
 async def start_conn():
@@ -34,9 +35,12 @@ async def start_conn():
     # locale = {'.\\database.sqlite3', '.\\rep_reg.py', '.\\script.js', '.\\db_funcs.py', '.\\requirements.txt', '.\\backend.py', '.\\LICENSE', '.\\__main__.py', '.\\backup.sqlite3', '.\\maintenence', '.\\clear.py', '.\\tests', '.\\__pycache__', '.\\Privacy Policy', '.\\README.md', '.\\user.jpeg', '.\\inject.sqlite3'}
     posts = await get_posts()
     files = {i[-4] for i in posts}
-    for file in glob.glob('./*'):
-        if not(file in files) and not(re.match(r'([a-zA-Z]{52})$', file) is None):
-            os.remove(file)
+    for i in glob.glob('*'):
+        match = re.match('([a-zA-Z]{52})', i)
+        if os.path.isfile(i) and match!=None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
+            if match.span()[0]==0 and not i in files:
+                # print('requirements met', i)
+                os.remove(i)
     
 
 async def back(to: str):
@@ -319,6 +323,14 @@ async def is_blacklisted(ip: str) -> bool:
 
 async def close():
     """Closes connection to database."""
+    posts = await get_posts()
+    files = {i[-4] for i in posts}
+    for i in glob.glob('*'):
+        match = re.match('([a-zA-Z]{52})', i)
+        if os.path.isfile(i) and match!=None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
+            if match.span()[0]==0 and not i in files:
+                # print('requirements met', i)
+                os.remove(i)
     await cursor.commit()
     await cursor.close()
 
@@ -331,6 +343,13 @@ if __name__ == "__main__":
         await start()
         await start_backup()
         if "y" in input("Perform database tests? (Y/N): ").lower():
+            pickled: tuple[bytes] = pickle.load(open('./data.pickle', 'rb'))
+            if not os.path.isfile('cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg'):
+                open('cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg', 'x')
+                open('cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg', 'wb').write(pickled[0])
+            if not os.path.isfile('RTSpMXFavdrLEuACcNZjhgmoqxHKbkGtDIeywQnYJWVBszPOUfli_requirements.txt'):
+                open('RTSpMXFavdrLEuACcNZjhgmoqxHKbkGtDIeywQnYJWVBszPOUfli_requirements.txt', 'x')
+                open('RTSpMXFavdrLEuACcNZjhgmoqxHKbkGtDIeywQnYJWVBszPOUfli_requirements.txt', 'wb').write(pickled[1])
             print(await get_posts(), await get_ips())
             await add_ip("", True)
             print(await is_blacklisted(""))
