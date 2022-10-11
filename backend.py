@@ -318,7 +318,7 @@ async def root(request: fastapi.Request):
 
 
 @app.on_event("shutdown")
-async def shutdown():
+async def shutdown(*args, **kwargs):
     await close()
 
 
@@ -365,7 +365,7 @@ async def fetch_resource(resource: str):
     if resource.strip() in {DATABASE, INJECT, BACKUP}:
         raise fastapi.HTTPException(403, "CANNOT ACCESS DATABASE.")
     else:
-        return fastapi.responses.FileResponse(resource)
+        return fastapi.responses.FileResponse(resource.strip())
 
 
 @app.get("/post/{post}")
