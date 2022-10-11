@@ -65,7 +65,7 @@ border-style:solid;
 color:white;
 border-color:rgba(95, 158, 160, 0.46);">
     <div>
-        <img src="{WEBSITE}/resource/user.jpeg" style="height: 30px;width:30px;border-radius: 512px;margin-left:15px;margin-top:15px;">
+        <img src="{WEBSITE}/resource/user.jpeg" style="height: 30px;width:30px;border-radius: 512px;margin-left:15px;margin-top:15px;" alt='Anonymous'>
         <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:10px">{title}</p>
         <p style="margin-left: 20px;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
             <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="upvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}')">↑</button>
