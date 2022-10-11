@@ -1,4 +1,5 @@
-import sys
+import os
+import glob
 import asyncio
 import typing
 import datetime
@@ -6,17 +7,32 @@ import random
 import ast
 import string
 import aiosqlite
+import re
+import pickle
 
 DATABASE = "./database.sqlite3"
 BACKUP = "./backup.sqlite3"
 INJECT = "./inject.sqlite3"
 cursor: aiosqlite.Connection = aiosqlite.connect(DATABASE)
 
-
+async def rm_files_ids(ids: list[str] | tuple[str] | set[str], fps_passed: bool=False):
+    """Removes all files to the corresponding post ids provided.
+    :param ids: file paths to files, or post ids."""
+    ids = {i[-4] for i in await get_posts() if i[0] in ids} if not(fps_passed) else ids
+    for i in ids:
+        if isinstance(i, str):
+            if os.path.isfile(i) and not(re.match(r'$([a-zA-Z]{52})', i) is None):os.remove(i)
+        
 async def start_conn():
     global cursor
     cursor = await aiosqlite.connect(DATABASE)
-
+    # locale = {'.\\database.sqlite3', '.\\rep_reg.py', '.\\script.js', '.\\db_funcs.py', '.\\requirements.txt', '.\\backend.py', '.\\LICENSE', '.\\__main__.py', '.\\backup.sqlite3', '.\\maintenence', '.\\clear.py', '.\\tests', '.\\__pycache__', '.\\Privacy Policy', '.\\README.md', '.\\user.jpeg', '.\\inject.sqlite3'}
+    posts = await get_posts()
+    files = {i[-4] for i in posts}
+    for file in glob.glob('./*'):
+        if not(file in files) and not(re.match(r'$([a-zA-Z]{52})', file) is None):
+            os.remove(file)
+    
 
 async def back(to: str):
     """Backups the main database to the database fp provided."""
@@ -149,9 +165,22 @@ async def delete_post(
 ) -> tuple[str, str, str, str, str, str, set[str], set[str]]:
     """Removes a post by it's id from the database, returns the database row as a tuple before deletion."""
     post = await get_post(id)
+    await rm_files_ids({post[-4]}, True)
     await cursor.execute("DELETE FROM posts WHERE id=?;", [id])
     await update_inject()
     return post
+
+async def delete_posts(
+    ids: typing.Iterable[str],
+) -> typing.AsyncGenerator[tuple[str, str, str, str, str, str, set[str], set[str]], None,]:
+    """Removes multiple posts by ids from the database, returns the database rows as a tuple before deletion."""
+    ids = {i for i in (await get_posts()) if i in ids} # type: ignore
+    for id in ids:
+        post = id
+        await rm_files_ids({post[-4]}, True)
+        await cursor.execute("DELETE FROM posts WHERE id=?;", [id])
+        await update_inject()
+        yield post # type: ignore
 
 
 async def to_thread(func: typing.Callable, *args, **kwargs):
@@ -171,6 +200,7 @@ async def update_post(
 ) -> tuple[str, str, str, str, str, str, set[str], set[str]]:
     """Updates a post with the arguments provided."""
     date = date.strftime("%Y-%m-%d") if isinstance(date, datetime.datetime) else date
+    await rm_files_ids({id}, False)
     await cursor.execute(
         "UPDATE posts SET id=?,title=?,content=?,date=?,fp=?,ip=?, upvotes=?, downvotes=? WHERE id=?",
         [id, title, content, date, fp, ip, str(upvotes), str(downvotes), id],
@@ -256,17 +286,21 @@ async def remove_downvote(ip: str, id: str):
 async def purge_ip(ip: str) -> list[tuple[str, str, str, str, str, set[str], set[str]]]:
     """Removes all posts from ip provided."""
     posts = await (
-        await cursor.execute("SELECT * FROM posts WHERE ip=?", ip)
+        await cursor.execute("SELECT * FROM posts WHERE ip=?", [ip])
     ).fetchall()
+    await rm_files_ids({i[-4] for i in posts}, True)
     await cursor.execute("DELETE FROM posts WHERE ip=?", [ip])
-    return [tuple(i) for i in posts]
+    return posts # type: ignore
 
 
 async def ban_author(id: str) -> str:
     """IP bans the author of a post id provided, returns the authors IP."""
     post = await get_post(id)
+    
     ip = post[-3]
-    await update_ip(ip, True)
+    
+    if not await is_blacklisted(ip):
+        await update_ip(ip, True)
     return ip
 
 
@@ -286,6 +320,7 @@ async def close():
 if __name__ == "__main__":
 
     async def main():
+        
         await start_conn()
         await start()
         await start_backup()
@@ -325,6 +360,24 @@ if __name__ == "__main__":
             await delete_post((await get_posts())[0][0])
             print(*await get_posts())
             # snip
+            await new_post('test post 2', 'test post 2', datetime.datetime.utcnow(), '129.168.2.1', 'cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg')
+            await new_post('test post 3', 'test post 3', '6969-69-69', '129.168.2.1', 'RTSpMXFavdrLEuACcNZjhgmoqxHKbkGtDIeywQnYJWVBszPOUfli_requirements.txt')
+            await new_post('CONST', 'CONST', 'CONST', 'CONST', 'CONST')
+            print(*await get_posts())
+            print((await get_posts())[-1][0])
+            await ban_author((await get_posts())[-1][0])
+            try:
+                post = await get_post((await get_posts())[-1][0])
+            except TypeError:
+                pass
+            else:
+                print('Author CONST was not banned.')
+            print(await is_blacklisted('CONST'))
+            print(*await get_posts(), *await get_ips())
+            await purge_ip('129.168.2.1')
+            print(*await get_posts(), *await get_ips())
+            await purge_ip('CONST')
+            print(*await get_posts(), *await get_ips())
             print(await is_inject("SELECT * FROM posts"))
             print(await is_inject("hello!"))
             await close()
