@@ -8,7 +8,8 @@ import ast
 import string
 import aiosqlite
 import re
-import pickle
+
+os.path.exists = lambda file: f'.\\{file}' in glob.glob('./*')
 
 DATABASE = "./database.sqlite3"
 BACKUP = "./backup.sqlite3"
@@ -21,7 +22,11 @@ async def rm_files_ids(ids: list[str] | tuple[str] | set[str], fps_passed: bool=
     ids = {i[-4] for i in await get_posts() if i[0] in ids} if not(fps_passed) else ids
     for i in ids:
         if isinstance(i, str):
-            if os.path.exists(i) and not(re.match(r'([a-zA-Z]{52})$', i) is None):os.remove(i)
+            print(i, 'TEST 71239')
+            if os.path.exists(i) and not(re.match('([a-zA-Z]{52})$', i) is None):#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
+                print('requirements met', i)
+                os.remove(i)
+                
         
 async def start_conn():
     global cursor
@@ -288,6 +293,7 @@ async def purge_ip(ip: str) -> list[tuple[str, str, str, str, str, set[str], set
     posts = await (
         await cursor.execute("SELECT * FROM posts WHERE ip=?", [ip])
     ).fetchall()
+    print({i[-4] for i in posts}, 'TESTING 1234')
     await rm_files_ids({i[-4] for i in posts}, True)
     await cursor.execute("DELETE FROM posts WHERE ip=?", [ip])
     return posts # type: ignore
@@ -360,18 +366,18 @@ if __name__ == "__main__":
             await delete_post((await get_posts())[0][0])
             print(*await get_posts())
             # snip
-            await new_post('test post 2', 'test post 2', datetime.datetime.utcnow(), '129.168.2.1', 'cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg')
-            await new_post('test post 3', 'test post 3', '6969-69-69', '129.168.2.1', 'RTSpMXFavdrLEuACcNZjhgmoqxHKbkGtDIeywQnYJWVBszPOUfli_requirements.txt')
+            await new_post('test post 2', 'test post 2', datetime.datetime.utcnow(), '192.168.2.1', 'cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg')
+            await new_post('test post 3', 'test post 3', '6969-69-69', '192.168.2.1', 'RTSpMXFavdrLEuACcNZjhgmoqxHKbkGtDIeywQnYJWVBszPOUfli_requirements.txt')
             await new_post('CONST', 'CONST', 'CONST', 'CONST', 'CONST')
             print(*await get_posts())
             print((await get_posts())[-1][0])
             await ban_author((await get_posts())[-1][0])
             post = await get_post((await get_posts())[-1][0])
-            if post is not None:
-                print('WARNING: Author CONST was not banned.')
+            if post is None:
+                print('Author CONST was banned.')
             print(await is_blacklisted('CONST'))
             print(*await get_posts(), *await get_ips())
-            await purge_ip('129.168.2.1')
+            await purge_ip('192.168.2.1')
             print(*await get_posts(), *await get_ips())
             await purge_ip('CONST')
             print(*await get_posts(), *await get_ips())
