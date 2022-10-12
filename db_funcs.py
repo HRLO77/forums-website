@@ -113,8 +113,6 @@ async def new_post(
             if isinstance(e, TypeError):
                 break
             id = "".join(random.sample(string.ascii_letters, k=52))
-        else:
-            break
     await cursor.execute(
         "INSERT INTO posts VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
         [id, title, content, date, fp, ip, "{}", "{}"],
