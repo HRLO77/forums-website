@@ -222,7 +222,7 @@ async def form(
     id: str = ""
     if file.filename != "":
         contents = await file.read()
-        if sum(len({f'{bin(i)}')-1 for i in contents) > 1073741824*8:
+        if sum(len(f'{bin(i)}')-1 for i in contents) > 1073741824*8:
             raise fastapi.HTTPException(413, "FILE MUST BE UNDER 1 GIGABYTE")
         else:
             id = "".join(random.sample(string.ascii_letters, k=52))
