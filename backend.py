@@ -13,7 +13,7 @@ import os
 WEBSITE = "http://127.0.0.1:8000"
 
 
-async def split(iter):
+async def split(iter, size: int=430):
     largest = {
         "@",
         "#",
@@ -32,7 +32,7 @@ async def split(iter):
             + int(char.lower() in small) * 1.5
             + int(char.lower() in largest) * 2.5
         )
-        if cur <= 430:
+        if cur <= size:
             s += char
         else:
             l.append(s)
@@ -235,8 +235,8 @@ async def form(
             open(f"{id}_{file.filename}", "x")
             with open(f"{id}_{file.filename}", "wb") as f:
                 f.write(contents)
-    if len(title) > 220:
-        raise fastapi.HTTPException(413, "TITLE MUST BE UNDER 220 CHARS")
+    if len(await split(title, 200)) > 1:
+        raise fastapi.HTTPException(413, "TITLE TOO LARGE")
     title = "".join(
         i
         for i in title.replace("<", "&lt;")
