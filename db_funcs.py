@@ -181,10 +181,9 @@ async def delete_posts(
 ) -> typing.AsyncGenerator[tuple[str, str, str, str, str, str, set[str], set[str]], None,]:
     """Removes multiple posts by ids from the database, returns the database rows as a tuple before deletion."""
     ids = {i for i in (await get_posts()) if i in ids} # type: ignore
-    for id in ids:
-        post = id
+    for post in ids:
         await rm_files_ids({post[-4]}, True)
-        await cursor.execute("DELETE FROM posts WHERE id=?;", [id])
+        await cursor.execute("DELETE FROM posts WHERE id=?;", [post[0]])
         await update_inject()
         yield post # type: ignore
 
