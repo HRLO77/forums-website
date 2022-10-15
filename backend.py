@@ -348,8 +348,8 @@ async def posts(request: fastapi.Request):
 
 @app.get("/resource/{resource}")
 async def fetch_resource(resource: str):
-    if resource.strip() in {DATABASE, INJECT, BACKUP}:
-        raise fastapi.HTTPException(403, "CANNOT ACCESS DATABASE.")
+    if resource.strip() in {DATABASE, INJECT, BACKUP} or '/' in resource.strip() or '\\' in resource.strip():
+        raise fastapi.HTTPException(403, "ACCESS DENIED.")
     else:
         def gen():
             with open(resource, 'rb') as f:
