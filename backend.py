@@ -9,6 +9,8 @@ import string
 import json
 import random
 import os
+import aiofiles
+
 
 WEBSITE = "http://127.0.0.1:8000"
 
@@ -232,9 +234,9 @@ async def form(
                 else:
                     break
             if len(await split(f"{id}_{file.filename}")) > 1:raise fastapi.HTTPException(413, "FILENAME TOO LARGE")
-            open(f"{id}_{file.filename}", "x")
-            with open(f"{id}_{file.filename}", "wb") as f:
-                f.write(contents)
+            async with aiofiles.open(f"{id}_{file.filename}", 'x') as f:pass
+            async with aiofiles.open(f"{id}_{file.filename}", 'wb') as f:
+                await f.write(contents)
     if len(await split(title, 200)) > 1:
         raise fastapi.HTTPException(413, "TITLE TOO LARGE")
     title = "".join(
@@ -265,23 +267,7 @@ async def form(
             str(request.client.host),
             f"{id}_{file.filename}",
         )
-    return fastapi.responses.HTMLResponse(
-        f"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>tips.saltfleet.org</title>
-</head>
-<body style="background:#030303;">
-    <div style="background: #030303">
-    <p style='color: white;margin-left:150px;margin-top:150px;'>Submitted! Check your post <a href='{WEBSITE}/post/{returned[0]}'>here</a>!</p>
-    </div>
-</body>
-</html>"""
-    )
+    return fastapi.responses.RedirectResponse(f'{WEBSITE}/post/{returned[0]}')
 
 
 @app.get("/")
@@ -365,7 +351,10 @@ async def fetch_resource(resource: str):
     if resource.strip() in {DATABASE, INJECT, BACKUP}:
         raise fastapi.HTTPException(403, "CANNOT ACCESS DATABASE.")
     else:
-        return fastapi.responses.FileResponse(resource.strip())
+        def gen():
+            with open(resource, 'rb') as f:
+                yield from f
+        return fastapi.responses.StreamingResponse(gen())
 
 
 @app.get("/post/{post}")
