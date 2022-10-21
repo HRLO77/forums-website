@@ -2,3 +2,5 @@ fastapi
 slowapi
 aiosqlite
 aiofiles
+uvicorn
+python-multipart
