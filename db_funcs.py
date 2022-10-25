@@ -179,8 +179,8 @@ async def delete_posts(
 ) -> typing.AsyncGenerator[tuple[str, str, str, str, str, str, set[str], set[str]], None,]:
     """Removes multiple posts by ids from the database, returns the database rows as a tuple before deletion."""
     ids = {i for i in (await get_posts()) if i in ids} # type: ignore
+    await rm_file_ids({i[-4] for i in ids},True)
     for post in ids:
-        await rm_files_ids({post[-4]}, True)
         await cursor.execute("DELETE FROM posts WHERE id=?;", [post[0]])
         await update_inject()
         yield post # type: ignore
@@ -203,7 +203,6 @@ async def update_post(
 ) -> tuple[str, str, str, str, str, str, set[str], set[str]]:
     """Updates a post with the arguments provided."""
     date = date.strftime("%Y-%m-%d") if isinstance(date, datetime.datetime) else date
-    await rm_files_ids({id}, False)
     await cursor.execute(
         "UPDATE posts SET id=?,title=?,content=?,date=?,fp=?,ip=?, upvotes=?, downvotes=? WHERE id=?",
         [id, title, content, date, fp, ip, str(upvotes), str(downvotes), id],
