@@ -10,7 +10,8 @@ import json
 import random
 import os
 import aiofiles
-
+import aiohttp
+session: aiohttp.ClientSession = aiohttp.ClientSession
 
 WEBSITE = "http://127.0.0.1:8000"
 
@@ -56,7 +57,7 @@ async def make_post(
     shortened: bool = True,
 ):
     rand = "".join(random.sample(string.ascii_letters, k=52))
-    c = await split(content)
+    c: list[str] = await split(content) # type: ignore
     return f"""
 <div style="background-color:black;
 text-rendering: optimizeSpeed;
@@ -70,8 +71,8 @@ border-color:rgba(95, 158, 160, 0.46);">
         <img src="{WEBSITE}/resource/user.jpeg" style="height: 30px;width:30px;border-radius: 512px;margin-left:15px;margin-top:15px;" alt='Anonymous'>
         <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:10px">{title}</p>
         <p style="margin-left: 20px;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
-            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="upvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}')">↑</button>
-            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="downvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}')">↓</button>
+            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="points('{str(id).strip()}', '{rand}');upvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↑</button>
+            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="points('{str(id).strip()}', '{rand}');downvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↓</button>
             <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:10px" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
     </div>
     <div style="margin-left:25px;font-size:smaller;">
@@ -90,12 +91,14 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 @app.on_event("startup")
 async def start(*args, **kwargs):
     await start_conn()
+    global session
+    session = aiohttp.ClientSession()
 
 
 @app.middleware("http")
 async def evaluate_ip(request: fastapi.Request, call_next):
     if await is_blacklisted(str(request.client.host)):
-        raise fastapi.HTTPException(403, "BLACKLISTED CLIENT ADDRESS")
+        return fastapi.responses.JSONResponse({"detail", "BLACKLISTED CLIENT ADDRESS"}, 403)
     else:
         return await call_next(request)
 
@@ -114,8 +117,9 @@ async def upvote(request: fastapi.Request, id: bytes = fastapi.Body()):
             await remove_upvote(str(request.client.host), id)
         elif (str(request.client.host) in post[-1]) and not (
             str(request.client.host) in post[-2]
-        ):  # downvote no upvote
-            raise fastapi.HTTPException(409, {"detail": "CLIENT HAS DOWNVOTED"})
+        ):  # 1 downvote no upvote
+            await remove_downvote(str(request.client.host), id)
+            await add_upvote(str(request.client.host), id)
         elif not str(request.client.host) in post[-1] and (
             str(request.client.host) in post[-2]
         ):  # no downvote and 1 upvote
@@ -125,7 +129,7 @@ async def upvote(request: fastapi.Request, id: bytes = fastapi.Body()):
         ):  # no downvote and no upvote
             await add_upvote(str(request.client.host), id)
     except Exception as e:
-        raise fastapi.exceptions.HTTPException(500, e)
+        return fastapi.responses.JSONResponse({"detail": f"{e}"}, 500)
 
 
 @app.post("/downvote")
@@ -147,13 +151,14 @@ async def downvote(request: fastapi.Request, id: bytes = fastapi.Body()):
         elif not (str(request.client.host) in post[-1]) and (
             str(request.client.host) in post[-2]
         ):  # no downvote and 1 upvote
-            raise fastapi.HTTPException(409, {"detail": "CLIENT HAS UPVOTED"})
+            await remove_upvote(str(request.client.host), id)
+            await add_downvote(str(request.client.host), id)
         elif not (str(request.client.host) in post[-1]) and not (
             str(request.client.host) in post[-2]
         ):  # no downvote and no upvote
             await add_downvote(str(request.client.host), id)
     except Exception as e:
-        raise fastapi.exceptions.HTTPException(500, e)
+        return fastapi.responses.JSONResponse({"detail": f"{e}"}, 500)
 
 
 @app.get("/new")
@@ -206,7 +211,7 @@ async def points(request: fastapi.Request, post_id: str):
     try:
         p = await get_post(post_id)
     except Exception:
-        raise fastapi.HTTPException(404, "POST NOT FOUND")
+        return fastapi.responses.JSONReponse({"detail":"POST NOT FOUND"}, 404)
     else:
         return fastapi.responses.PlainTextResponse(str(len(p[-2]) - len(p[-1])))
 
@@ -220,12 +225,12 @@ async def form(
     file: fastapi.UploadFile = fastapi.File(),
 ):
     if (await is_inject(title)) or (await is_inject(content)):
-        raise fastapi.HTTPException(403, "SQL INJECT DETECTED")
+        return fastapi.responses.JSONResponse({"detail":"SQL INJECT DETECTED"}, 403)
     id: str = ""
     if file.filename != "":
         contents = await file.read()
         if sum(len(f'{bin(i)}')-1 for i in contents) > 1073741824*8:
-            raise fastapi.HTTPException(413, "FILE MUST BE UNDER 1 GIGABYTE")
+            return fastapi.responses.JSONResponse({"detail": "FILE MUST BE UNDER 1 GIGABYTE"}, 413)
         else:
             id = "".join(random.sample(string.ascii_letters, k=52))
             while True:
@@ -233,12 +238,12 @@ async def form(
                     id = "".join(random.sample(string.ascii_letters, k=52))
                 else:
                     break
-            if len(await split(f"{id}_{file.filename}")) > 1:raise fastapi.HTTPException(413, "FILENAME TOO LARGE")
+            if len(await split(f"{id}_{file.filename}")) > 1:return fastapi.responses.JSONResponse({"detail": "FILENAME TOO LARGE"}, 413)
             async with aiofiles.open(f"{id}_{file.filename}", 'x') as f:pass
             async with aiofiles.open(f"{id}_{file.filename}", 'wb') as f:
                 await f.write(contents)
     if len(await split(title, 200)) > 1:
-        raise fastapi.HTTPException(413, "TITLE TOO LARGE")
+        return fastapi.responses.JSONResponse({"detail":"TITLE TOO LARGE"}, 413)
     title = "".join(
         i
         for i in title.replace("<", "&lt;")
@@ -267,7 +272,9 @@ async def form(
             str(request.client.host),
             f"{id}_{file.filename}",
         )
-    return fastapi.responses.RedirectResponse(f'{WEBSITE}/post/{returned[0]}')
+    async with session.get(f'{WEBSITE}/post/{returned[0]}') as resp:
+        
+        return fastapi.responses.HTMLResponse(resp.content)
 
 
 @app.get("/")
@@ -306,6 +313,7 @@ async def root(request: fastapi.Request):
 @app.on_event("shutdown")
 async def shutdown(*args, **kwargs):
     await close()
+    await session.close()
 
 
 @app.get("/posts")
@@ -349,12 +357,9 @@ async def posts(request: fastapi.Request):
 @app.get("/resource/{resource}")
 async def fetch_resource(resource: str):
     if resource.strip() in {DATABASE, INJECT, BACKUP} or '/' in resource.strip() or '\\' in resource.strip():
-        raise fastapi.HTTPException(403, "ACCESS DENIED.")
+        return fastapi.responses.JSONResponse({"detail": "ACCESS DENIED"}, 403)
     else:
-        def gen():
-            with open(resource, 'rb') as f:
-                yield from f
-        return fastapi.responses.StreamingResponse(gen())
+        return fastapi.responses.FileResponse(resource)
 
 
 @app.get("/post/{post}")
@@ -391,7 +396,7 @@ async def post(request: fastapi.Request, post: str):
             post
         )
     except Exception:
-        raise fastapi.HTTPException(404, {"detail": "POST NOT FOUND"})
+        return fastapi.responses.JSONResponse({"detail", "POST NOT FOUND"}, 404)
     page += await make_post(*p, False)
     page += """    </div></body>
 </body>
