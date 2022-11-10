@@ -273,8 +273,7 @@ async def form(
             f"{id}_{file.filename}",
         )
     async with session.get(f'{WEBSITE}/post/{returned[0]}') as resp:
-        
-        return fastapi.responses.HTMLResponse(resp.content)
+        return fastapi.responses.HTMLResponse(await resp.text())
 
 
 @app.get("/")
