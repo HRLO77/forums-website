@@ -118,8 +118,8 @@ async def upvote(request: fastapi.Request, id: bytes = fastapi.Body()):
         elif (str(request.client.host) in post[-1]) and not (
             str(request.client.host) in post[-2]
         ):  # 1 downvote no upvote
-            await remove_downvote(str(request.client.host), id)
             await add_upvote(str(request.client.host), id)
+            await remove_downvote(str(request.client.host), id)
         elif not str(request.client.host) in post[-1] and (
             str(request.client.host) in post[-2]
         ):  # no downvote and 1 upvote
@@ -151,8 +151,8 @@ async def downvote(request: fastapi.Request, id: bytes = fastapi.Body()):
         elif not (str(request.client.host) in post[-1]) and (
             str(request.client.host) in post[-2]
         ):  # no downvote and 1 upvote
-            await remove_upvote(str(request.client.host), id)
             await add_downvote(str(request.client.host), id)
+            await remove_upvote(str(request.client.host), id)
         elif not (str(request.client.host) in post[-1]) and not (
             str(request.client.host) in post[-2]
         ):  # no downvote and no upvote
@@ -294,7 +294,7 @@ async def root(request: fastapi.Request):
     justify-content: center;
     align-items:center;
     height: 6vh;
-    background-color:rgba(95, 158, 160, 0.46);;
+    background-color:rgba(95, 158, 160, 0.46);
     font-family: 'Montserrat', sans-serif;
     ">
         <div>
@@ -303,7 +303,7 @@ async def root(request: fastapi.Request):
             <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
         </div>
     </nav>
-    <h1 style='margin-left:92vh;color:white;'>Root</h1>
+    <h1 style='margin-left:650px;color:white;'>Root</h1>
 </body>
 </html>"""
     )
@@ -336,7 +336,7 @@ async def posts(request: fastapi.Request):
         justify-content: center;
         align-items:center;
         height: 6vh;
-        background-color:rgba(95, 158, 160, 0.46);;
+        background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;
         ">
             <div>
@@ -381,7 +381,7 @@ async def post(request: fastapi.Request, post: str):
         justify-content: center;
         align-items:center;
         height: 6vh;
-        background-color:rgba(95, 158, 160, 0.46);;
+        background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;
         ">
             <div>
