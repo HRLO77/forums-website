@@ -13,7 +13,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.route("/")
 @limiter.limit("1/minute")
-async def root(request: fastapi.Request, *args, **kwargs):
+async def root(request: fastapi.Request,):
     return fastapi.responses.JSONResponse(
         {"detail": "Under construction, check back in later."}, 503
     )
