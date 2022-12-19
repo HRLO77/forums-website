@@ -21,10 +21,9 @@ async def rm_files_ids(ids: list[str] | tuple[str] | set[str], fps_passed: bool=
     ids = {i[-4] for i in await get_posts() if i[0] in ids} if not(fps_passed) else ids
     for i in ids:
         if isinstance(i, str):
-            match = re.match('([a-zA-Z]{52})', i)
+            match = re.match('^([a-zA-Z]{52})', i)
             if os.path.isfile(i) and match!=None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
-                if match.span()[0]==0:
-                    os.remove(i)
+                os.remove(i)
                 
         
 async def start_conn():
@@ -34,9 +33,9 @@ async def start_conn():
     posts = await get_posts()
     files = {i[-4] for i in posts}
     for i in glob.glob('*'):
-        match = re.match('([a-zA-Z]{52})', i)
+        match = re.match('^([a-zA-Z]{52})', i)
         if os.path.isfile(i) and match!=None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
-            if match.span()[0]==0 and not i in files:
+            if not i in files:
                 os.remove(i)
     
 
@@ -318,9 +317,9 @@ async def close():
     posts = await get_posts()
     files = {i[-4] for i in posts}
     for i in glob.glob('*'):
-        match = re.match('([a-zA-Z]{52})', i)
+        match = re.match('^([a-zA-Z]{52})', i)
         if os.path.isfile(i) and match!=None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
-            if match.span()[0]==0 and not i in files:
+            if not i in files:
                 # print('requirements met', i)
                 os.remove(i)
     await cursor.commit()
