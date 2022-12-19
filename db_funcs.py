@@ -10,9 +10,9 @@ import aiosqlite
 import re
 import pickle
 
-DATABASE = "./database.sqlite3"
-BACKUP = "./backup.sqlite3"
-INJECT = "./inject.sqlite3"
+DATABASE = "database.sqlite3"
+BACKUP = "backup.sqlite3"
+INJECT = "inject.sqlite3"
 cursor: aiosqlite.Connection = aiosqlite.connect(DATABASE)
 
 async def rm_files_ids(ids: list[str] | tuple[str] | set[str], fps_passed: bool=False):
