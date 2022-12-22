@@ -11,6 +11,7 @@ import random
 import os
 import aiofiles
 import aiohttp
+import pathlib
 session: aiohttp.ClientSession = aiohttp.ClientSession
 
 WEBSITE = "http://127.0.0.1:8000"
@@ -173,7 +174,7 @@ async def new(request: fastapi.Request):
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>tips.saltfleet.org</title>
-    
+
 </head>
 <body style="background:#030303;">
     <nav style="
@@ -202,7 +203,7 @@ async def new(request: fastapi.Request):
       </form>
 </body>
 </html>"""
-    )
+)
 
 
 @app.get("/points")
@@ -229,7 +230,25 @@ async def form(
     id: str = ""
     if file.filename != "":
         contents = await file.read()
-        if sum(len(f'{bin(i)}')-1 for i in contents) > 1073741824*8:
+        async def is_too_big(b: bytes, name):
+            '''Checks if a file is more than 1 GiB in size, and is a valid file.'''
+            try:
+                async with aiofiles.open(name, 'x'):pass
+                try:
+                    async with aiofiles.open(name, 'wb') as f:await f.write(b)
+                except Exception:
+                    try:
+                        os.remove(name)
+                    except Exception:pass
+                    return True
+                stat = os.stat(name)
+                os.remove(name)
+                return stat.st_size / (1024 * 1024) > 1024
+            except Exception:
+                os.remove(name)
+                return True
+
+        if (await is_too_big(contents, file.filename)):
             return fastapi.responses.JSONResponse({"detail": "FILE MUST BE UNDER 1 GIGABYTE"}, 413)
         else:
             id = "".join(random.sample(string.ascii_letters, k=52))
