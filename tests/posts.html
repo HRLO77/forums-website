@@ -5,13 +5,73 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>tips.saltfleet.org</title>
-    
+    <link rel="stylesheet" href="../dropdown.css">
+    <script src="../script.js">
+    </script>
 </head>
 <body style="background:#030303;">
+    <div style="background: #030303">
+        <nav style="
+        display:flex;
+        justify-content: center;
+        align-items:center;
+        height:40pt;
+        background-color:rgba(95, 158, 160, 0.46);
+        font-family: 'Montserrat', sans-serif;
+        ">
+            <div>
+            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:100px;">Policy</button></a>
+            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">All posts</button></a>
+            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
+            </div>
+        </nav>
+        <div class="dropdown">
+            <button onclick="drop()" class="dropbtn">Sort by:</button>
+            <div id="myDropdown" class="dropdown-content">
+                <a href="{WEBSITE}/posts?sortby=latest">Latest</a>
+                <a href="{WEBSITE}/posts?sortby=oldest">Oldest</a>
+                <a href="{WEBSITE}/posts?sortby=score">Score</a>
+                <a href="{WEBSITE}/posts?sortby=length">Length</a>
+                <a href="{WEBSITE}/posts?sortby=file">File</a>
+                <a href="{WEBSITE}/posts?sortby=file_latest">File latest</a>
+            </div>
+        </div>
+    <div>
+        <p style="text-rendering: optimizeSpeed;color:white;font-family:'Courier New', Courier, monospace;font-size:large;margin-left:3.3%;margin-top:1.5%">	
+            &#128392; Pinned by moderators</p>
+        <div style="background-color:black;
+        text-rendering: optimizeSpeed;
+        margin-top:1.5%;
+        margin-left:3.3%;
+        border-radius: 15px;
+        border:0.1%;
+        border-style:solid;
+        color:white;
+        border-color:rgba(95, 158, 160, 0.46);">
+            <div>
+                <img src="../user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%">
+                <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%">Title</p>
+                <p style="margin-left: 1.4%;font-family:sans-serif;font-size:medium;">Posted on: 2022-09-11 - ID: 6969696969696 <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
+                <script>let upvote = function(){fetch('https://domain.com/path/', {method: 'POST',body: JSON.stringify( {} )} ).then( response => response.json() ).then( response => {''} )}</script>
+                <script>let downvote = function() {fetch('https://domain.com/path/', {method: 'POST',body: JSON.stringify( {} )} ).then( response => response.json() ).then( response => {''} )}</script>
+                <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote();">↑</button>
+                <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote();">↓</button>
+                <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%">15 points</p>
+            </div>
+            <div style="margin-left:1.75%;font-size:smaller;">
+                <p>Hello</p>
+                <p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>
+            </div>
+        </div>
+    </div>
+    <div>
+        <p style="text-rendering: optimizeSpeed;color:white;font-family:'Courier New', Courier, monospace;font-size:large;margin-left:3.3%;margin-top:2%">	
+            &#128392; Pinned by moderators</p>
     <div style="background-color:black;
     text-rendering: optimizeSpeed;
-    margin:50px;
-    border-radius: 15px;
+    margin-top:2%;
+    margin-left:3.3%;
+    border-radius:15px;
     border:5px;
     border-style:solid;
     color:white;
@@ -31,25 +91,7 @@
             <p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>
         </div>
     </div>
-        <div style="background-color:black;
-        text-rendering: optimizeSpeed;
-        margin:50px;
-        border-radius: 15px;
-        border:5px;
-        border-style:solid;
-        color:white;
-        border-color:rgba(95, 158, 160, 0.46);">
-            <div>
-                <img src="../user.jpeg" style="height: 30px;width:30px;border-radius: 512px;margin-left:15px;margin-top:15px;">
-                <p style="float:right;margin-right:1310px;font-size:larger;">hello</p>
-                <p style="margin-left: 15px;font-family:sans-serif;font-size:smaller;">Posted on 2022-09-13</p>
-            </div>
-            <div style="margin-left:25px;font-size:smaller;">
-                <p>hello</p>
-                <p>hello</p>
-            </div>
-        </div>
-        </div>
+</div>
     </body>
 </body>
 </html>

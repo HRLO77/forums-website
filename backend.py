@@ -14,10 +14,11 @@ import aiohttp
 import pathlib
 session: aiohttp.ClientSession = aiohttp.ClientSession
 
+SORT_PIN = '&#128392; Pinned'
 WEBSITE = "http://127.0.0.1:8000"
 
 
-async def split(iter, size: int=430):
+async def split(iter, size: int=470):
     largest = {
         "@",
         "#",
@@ -53,33 +54,67 @@ async def make_post(
     date: str,
     file: str,
     ip: str,
-    upvotes: set[str],
-    downvotes: set[str],
+    pin: str=None,
+    upvotes: set[str]=set(),
+    downvotes: set[str]=set(),
     shortened: bool = True,
 ):
     rand = "".join(random.sample(string.ascii_letters, k=52))
     c: list[str] = await split(content) # type: ignore
-    return f"""
-<div style="background-color:black;
-text-rendering: optimizeSpeed;
-margin:50px;
-border-radius: 15px;
-border:5px;
-border-style:solid;
-color:white;
-border-color:rgba(95, 158, 160, 0.46);">
+    if pin is None:
+        return f"""
     <div>
-        <img src="{WEBSITE}/resource/user.jpeg" style="height: 30px;width:30px;border-radius: 512px;margin-left:15px;margin-top:15px;" alt='Anonymous'>
-        <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:10px">{title}</p>
-        <p style="margin-left: 20px;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
-            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="points('{str(id).strip()}', '{rand}');upvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↑</button>
-            <button style="margin-left:20px;color:white;background-color:#030303;border-radius:18px;border-color:cadetblue;margin-top:15px" onclick="points('{str(id).strip()}', '{rand}');downvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↓</button>
-            <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:10px" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
+        <div style="background-color:black;
+        text-rendering: optimizeSpeed;
+        margin-top:1.5%;
+        margin-left:3.3%;
+        border-radius: 15px;
+        border:0.1%;
+        border-style:solid;
+        color:white;
+        border-color:rgba(95, 158, 160, 0.46);">
+            <div>
+                <img src="{WEBSITE}/resource/user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
+                <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%">{title}</p>
+                <p style="margin-left: 1.4%;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
+                <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↑</button>
+                <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↓</button>
+                <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
+            </div>
+            <div style="margin-left:1.75%;font-size:smaller;">
+                <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')()}</p>
+            </div>
+        </div>
     </div>
-    <div style="margin-left:25px;font-size:smaller;">
-        <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')()}</p>
+    """
+    else:
+        return f"""
+    <div>
+        <p style="text-rendering: optimizeSpeed;color:white;font-family:'Courier New', Courier, monospace;font-size:large;margin-left:3.3%;margin-top:1.5%">	
+            {pin}</p>
+        <div style="background-color:black;
+        text-rendering: optimizeSpeed;
+        margin-top:1.5%;
+        margin-left:3.3%;
+        border-radius: 15px;
+        border:0.1%;
+        border-style:solid;
+        color:white;
+        border-color:rgba(95, 158, 160, 0.46);">
+            <div>
+                <img src="{WEBSITE}/resource/user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
+                <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%"{title}</p>
+                <p style="margin-left: 1.4%;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
+                <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="points('{str(id).strip()}', '{rand}');upvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↑</button>
+                <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="points('{str(id).strip()}', '{rand}');downvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↓</button>
+                <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
+            </div>
+            <div style="margin-left:1.75%;font-size:smaller;">
+                <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')()}</p>
+            </div>
+        </div>
     </div>
-</div>"""
+    """
 
 
 limiter = slowapi.Limiter(key_func=util.get_remote_address)
@@ -161,6 +196,10 @@ async def downvote(request: fastapi.Request, id: bytes = fastapi.Body()):
     except Exception as e:
         return fastapi.responses.JSONResponse({"detail": f"{e}"}, 500)
 
+@app.post('/fmd')
+@limiter.limit('60/min')
+async def fmd(request: fastapi.Request, data: bytes=b'data'):
+    pass
 
 @app.get("/new")
 @limiter.limit("60/minute")
@@ -173,15 +212,17 @@ async def new(request: fastapi.Request):
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src='{WEBSITE}/resource/script.js'></script>
     <title>tips.saltfleet.org</title>
 
 </head>
 <body style="background:#030303;">
+    
     <nav style="
     display:flex;
     justify-content: center;
     align-items:center;
-    height: 6vh;
+    height: 40pt;
     background-color:rgba(95, 158, 160, 0.46);;
     font-family: 'Montserrat', sans-serif;
     ">
@@ -192,14 +233,14 @@ async def new(request: fastapi.Request):
         </div>
     </nav>
     <h1 style='color:white;margin-left:100px;'>New post</h1>
-    <form action="{WEBSITE}/form" method="post" enctype="multipart/form-data">
-        <div style="margin-left: 150px;margin-top:50px;color:white;border-radius:10px"><label for="title">Title:</label></div>    
-        <div style="margin-left: 100px;margin-top:50px;color:white;border-radius:10px"><input type="text" id="title" name="title"><br><br></div>
-        <div style="margin-left: 150px;margin-top:50px;color:white;border-radius:10px"><label for="content">Content:</label></div>
-        <div style="margin-left: 100px;margin-top:50px;color:white;border-radius:10px"><input type="text" id="content" name="content"><br><br></div>
-        <div style="margin-left: 150px;margin-top:50px;color:white;border-radius:10px"><label for="file">File:</label></div>
-        <div style="margin-left: 100px;margin-top:50px;color:white;border-radius:10px"><input type="file" id="file" name="file"><br><br></div>
-        <div style="margin-left: 100px;margin-top:50px;color:white;border-radius:10px"><input type="submit" value="Submit"></div>
+    <form action="{WEBSITE}/form" method="post" enctype="multipart/form-data" id='post_form'>
+        <div style="margin-left: 9.95%;margin-top:50px;color:white;border-radius:10px"><label for="title">Title:</label></div>    
+        <div style="margin-left: 6.5%;margin-top:50px;color:white;border-radius:10px"><input type="text" id="title" name="title"><br><br></div>
+        <div style="margin-left: 9.95%;margin-top:50px;color:white;border-radius:10px"><label for="content">Content:</label></div>
+        <div style="margin-left: 6.5%;margin-top:50px;color:white;border-radius:10px"><input type="text" id="content" name="content"><br><br></div>
+        <div style="margin-left: 9.95%;margin-top:50px;color:white;border-radius:10px"><label for="file">File:</label></div>
+        <div style="margin-left: 6.5%;margin-top:50px;color:white;border-radius:10px"><input type="file" id="file" name="file" onchange="uploadFile()"><br><progress id='progress' value='0' max='100' style="width: 17.625%;"></progress><p id='status'></p></div>
+        <div style="margin-left: 6.5%;margin-top:50px;color:white;border-radius:10px"><input type="submit" value="Submit"></div>
       </form>
 </body>
 </html>"""
@@ -211,8 +252,8 @@ async def new(request: fastapi.Request):
 async def points(request: fastapi.Request, post_id: str):
     try:
         p = await get_post(post_id)
-    except Exception:
-        return fastapi.responses.JSONReponse({"detail":"POST NOT FOUND"}, 404)
+    except Exception as e:
+        return fastapi.responses.JSONResponse({"detail":"POST NOT FOUND"}, 404)
     else:
         return fastapi.responses.PlainTextResponse(str(len(p[-2]) - len(p[-1])))
 
@@ -305,6 +346,7 @@ async def root(request: fastapi.Request):
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{WEBSITE}/resource/dropdown.css">
     <title>tips.saltfleet.org</title>
 </head>
 <body style="background:#030303;">
@@ -312,7 +354,7 @@ async def root(request: fastapi.Request):
     display:flex;
     justify-content: center;
     align-items:center;
-    height: 6vh;
+    height: 40pt;
     background-color:rgba(95, 158, 160, 0.46);
     font-family: 'Montserrat', sans-serif;
     ">
@@ -336,14 +378,16 @@ async def shutdown(*args, **kwargs):
 
 @app.get("/posts")
 @limiter.limit("60/minute")
-async def posts(request: fastapi.Request):
-
+async def posts(request: fastapi.Request, sortby: str='latest'):
+    valids = {'latest', 'score', 'length', 'file', 'file_latest', 'oldest'}
+    if not sortby.lower() in valids:return fastapi.responses.JSONResponse({'detail': 'INVALID SORT TYPE', 'sorts': f'{valids}'}, 404)
     page = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{WEBSITE}/resource/dropdown.css">
     <title>tips.saltfleet.org</title>
     
 </head>
@@ -354,7 +398,7 @@ async def posts(request: fastapi.Request):
         display:flex;
         justify-content: center;
         align-items:center;
-        height: 6vh;
+        height: 40pt;
         background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;
         ">
@@ -363,9 +407,43 @@ async def posts(request: fastapi.Request):
             <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
             </div>
-        </nav>"""
-    for args in await get_posts():
-        page += await make_post(*args)
+        </nav>
+    <div class="dropdown">
+        <button onclick="drop()" class="dropbtn">Sort by:</button>
+        <div id="myDropdown" class="dropdown-content">
+            <a href="{WEBSITE}/posts?sortby=latest">Latest</a>
+            <a href="{WEBSITE}/posts?sortby=oldest">Oldest</a>
+            <a href="{WEBSITE}/posts?sortby=score">Score</a>
+            <a href="{WEBSITE}/posts?sortby=length">Length</a>
+            <a href="{WEBSITE}/posts?sortby=file">File</a>
+            <a href="{WEBSITE}/posts?sortby=file_latest">File latest</a>
+        </div>
+    </div>
+        
+"""
+    ps = [*await get_posts()]
+    pins = []
+    c = 0  # save on iterations
+    
+    for i in ps:
+        if i[6] == SORT_PIN:  # 7th index is pin message
+            pins += [i]
+            ps.pop(c)
+        c+=1
+    def filedate(d):
+        return sorted(d, key=lambda post: (int(post[4]!=None), datetime.datetime(int(post[3][:4]), int(post[3][6:8]), int(post[3][9:]))))
+    if sortby == 'score':
+        ps, pins = sorted(ps, key=lambda post: len(post[-2]) - len(post[-1]), reverse=True), sorted(pins, key=lambda post: len(post[-2]) - len(post[-1]), reverse=True)
+    elif sortby == 'length':
+        ps, pins = sorted(ps, key=lambda post: len(post[2]), reverse=True), sorted(pins, key=lambda post: len(post[2]), reverse=True)
+    elif sortby == 'file':
+        ps, pins = sorted(ps, key=lambda post: post[4]!=None), sorted(pins, key=lambda post: post[4]!=None)
+    elif sortby == 'oldest':
+        ps, pins = reversed(ps), reversed(pins)
+    elif sortby == 'file_latest':
+        ps, pins = filedate(ps), filedate(pins)
+    for p in pins:page+=await make_post(*p)
+    for p in ps:page+=await make_post(*p)
     page += """    </div></body>
 </body>
 </html>"""
@@ -389,17 +467,19 @@ async def post(request: fastapi.Request, post: str):
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <title>tips.saltfleet.org</title>
     
 </head>
 <body style="background:#030303;">
+    <link rel="stylesheet" href="{WEBSITE}/resource/dropdown.css">
     <script src='{WEBSITE}/resource/script.js'></script>
     <div style="background: #030303">
         <nav style="
         display:flex;
         justify-content: center;
         align-items:center;
-        height: 6vh;
+        height:40pt;
         background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;
         ">
@@ -408,11 +488,20 @@ async def post(request: fastapi.Request, post: str):
             <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
             </div>
-        </nav>"""
+        </nav>
+    <div class="dropdown">
+        <button onclick="drop()" class="dropbtn">Sort by:</button>
+        <div id="myDropdown" class="dropdown-content">
+            <a href="{WEBSITE}/posts?sortby=latest">Latest</a>
+            <a href="{WEBSITE}/posts?sortby=oldest">Oldest</a>
+            <a href="{WEBSITE}/posts?sortby=score">Score</a>
+            <a href="{WEBSITE}/posts?sortby=length">Length</a>
+            <a href="{WEBSITE}/posts?sortby=file">File</a>
+            <a href="{WEBSITE}/posts?sortby=file_latest">File latest</a>
+        </div>
+    </div>"""
     try:
-        p: tuple[str, str, str, str, str, str, set[str], set[str]] = await get_post(
-            post
-        )
+        p: tuple[str, str, str, str, str, str, str, set[str], set[str]] = await get_post(post)
     except Exception:
         return fastapi.responses.JSONResponse({"detail", "POST NOT FOUND"}, 404)
     page += await make_post(*p, False)

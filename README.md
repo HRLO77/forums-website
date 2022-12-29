@@ -17,6 +17,11 @@ Downvotes a post.
 Query params:
 post_id - The ID of the post to downvote.
 
+* /fmd/
+Recieves only multipart/formdata for files (progress loading in JS) for progress bars.
+Body params:
+data - bytes.
+
 * /form/
 Creates a new post with multipart/form-data data.
 Body params:
@@ -29,6 +34,8 @@ All GET endpoints are ratelimited to 60/minute.
 
 * /posts/
 Returns HTML page with all the posts.
+Query params:
+sortby - What order posts should be sorted in.
 
 * /post/
 Views a single post.
