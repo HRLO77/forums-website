@@ -14,7 +14,7 @@ import aiohttp
 import pathlib
 session: aiohttp.ClientSession = aiohttp.ClientSession
 
-SORT_PIN = '&#128392; Pinned by moderators'
+SORT_PIN = '&#128392; Pinned'
 WEBSITE = "http://127.0.0.1:8000"
 
 
