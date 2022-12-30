@@ -1,5 +1,12 @@
 # website
 A website to post anonymous tips (about school because I dunno how to do english)
+## Managing posts
+To manage posts in the database (pinning posts, removing authors, banning IP's).
+
+Write code desired in interact.py and run `python interact.py --user`.
+
+An example is in interact.py to pin a post with an ID. Pinned posts will be sorted by the
+`SORT_PIN` variable in `backend.py`, which is currently equal to `'&#128392; Pinned'`.
 # requirements
 Install requirements with `python -m pip install -r requirements.txt`.
 
@@ -60,3 +67,4 @@ Returns an HTML page to submit a form that creates a new post.
 
 # Docker
 To deploy this, follow the instructions in the Dockerfile within this directory to build and run an image.
+
