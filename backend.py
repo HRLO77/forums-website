@@ -234,13 +234,13 @@ async def new(request: fastapi.Request):
     </nav>
     <h1 style='color:white;margin-left:100px;'>New post</h1>
     <form action="{WEBSITE}/form" method="post" enctype="multipart/form-data" id='post_form'>
-        <div style="margin-left: 9.95%;margin-top:50px;color:white;border-radius:10px"><label for="title">Title:</label></div>    
-        <div style="margin-left: 6.5%;margin-top:50px;color:white;border-radius:10px"><input type="text" id="title" name="title"><br><br></div>
-        <div style="margin-left: 9.95%;margin-top:50px;color:white;border-radius:10px"><label for="content">Content:</label></div>
-        <div style="margin-left: 6.5%;margin-top:50px;color:white;border-radius:10px"><input type="text" id="content" name="content"><br><br></div>
-        <div style="margin-left: 9.95%;margin-top:50px;color:white;border-radius:10px"><label for="file">File:</label></div>
-        <div style="margin-left: 6.5%;margin-top:50px;color:white;border-radius:10px"><input type="file" id="file" name="file" onchange="uploadFile()"><br><progress id='progress' value='0' max='100' style="width: 17.625%;"></progress><p id='status'></p></div>
-        <div style="margin-left: 6.5%;margin-top:50px;color:white;border-radius:10px"><input type="submit" value="Submit"></div>
+        <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="title">Title:</label></div>    
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:10%;width:60%;display:flex;"><input type="text" id="title" name="title"><br><br></div>
+        <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="content">Content:</label></div>
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:10%;width:60%;display:flex;"><input type="text" id="content" name="content"><br><br></div>
+        <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="file">File:</label></div>
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px"><input type="file" id="file" name="file" onchange="uploadFile()"><br><br><progress id='progress' value='0' max='100' style="width: 15.625%;"></progress><p id='status' style="font-size: small'">0% Uploaded</p></div>
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px"><input type="submit" value="Submit"></div>
       </form>
 </body>
 </html>"""
@@ -302,7 +302,7 @@ async def form(
             async with aiofiles.open(f"{id}_{file.filename}", 'x') as f:pass
             async with aiofiles.open(f"{id}_{file.filename}", 'wb') as f:
                 await f.write(contents)
-    if len(await split(title, 200)) > 1:
+    if len(await split(title, 300)) > 1:
         return fastapi.responses.JSONResponse({"detail":"TITLE TOO LARGE"}, 413)
     title = "".join(
         i
@@ -364,7 +364,7 @@ async def root(request: fastapi.Request):
             <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
         </div>
     </nav>
-    <h1 style='margin-left:650px;color:white;'>Root</h1>
+    <h1 style='margin-left:45%;color:white;'>Root</h1>
 </body>
 </html>"""
     )
@@ -379,7 +379,7 @@ async def shutdown(*args, **kwargs):
 @app.get("/posts")
 @limiter.limit("60/minute")
 async def posts(request: fastapi.Request, sortby: str='latest'):
-    valids = {'latest', 'score', 'length', 'file', 'file_latest', 'oldest'}
+    valids = {'latest', 'score', 'length', 'file', 'oldest', 'file_oldest'}
     if not sortby.lower() in valids:return fastapi.responses.JSONResponse({'detail': 'INVALID SORT TYPE', 'sorts': f'{valids}'}, 404)
     page = f"""<!DOCTYPE html>
 <html lang="en">
@@ -416,7 +416,7 @@ async def posts(request: fastapi.Request, sortby: str='latest'):
             <a href="{WEBSITE}/posts?sortby=score">Score</a>
             <a href="{WEBSITE}/posts?sortby=length">Length</a>
             <a href="{WEBSITE}/posts?sortby=file">File</a>
-            <a href="{WEBSITE}/posts?sortby=file_latest">File latest</a>
+            <a href="{WEBSITE}/posts?sortby=file_oldest">File Oldest</a>
         </div>
     </div>
         
@@ -430,18 +430,17 @@ async def posts(request: fastapi.Request, sortby: str='latest'):
             pins += [i]
             ps.pop(c)
         c+=1
-    def filedate(d):
-        return sorted(d, key=lambda post: (int(post[4]!=None), datetime.datetime(int(post[3][:4]), int(post[3][6:8]), int(post[3][9:]))))
+    datepost = lambda post: datetime.datetime(int(post[3][:4]), int(post[3][5:7]), int(post[3][8:]))
     if sortby == 'score':
         ps, pins = sorted(ps, key=lambda post: len(post[-2]) - len(post[-1]), reverse=True), sorted(pins, key=lambda post: len(post[-2]) - len(post[-1]), reverse=True)
     elif sortby == 'length':
         ps, pins = sorted(ps, key=lambda post: len(post[2]), reverse=True), sorted(pins, key=lambda post: len(post[2]), reverse=True)
     elif sortby == 'file':
-        ps, pins = sorted(ps, key=lambda post: post[4]!=None), sorted(pins, key=lambda post: post[4]!=None)
+        ps, pins = sorted(ps, key=lambda post: (post[4]!=None, datepost(post)), reverse=True), sorted(pins, key=(lambda post: (post[4]!=None, datepost(post))), reverse=True)
     elif sortby == 'oldest':
         ps, pins = reversed(ps), reversed(pins)
-    elif sortby == 'file_latest':
-        ps, pins = filedate(ps), filedate(pins)
+    elif sortby == 'file_oldest':
+       ps, pins = reversed(sorted(ps, key=lambda post: (datepost(post), post[4]!=None),)), sorted(sorted(pins, key=(lambda post: (datepost(post), post[4]!=None)), ))
     for p in pins:page+=await make_post(*p)
     for p in ps:page+=await make_post(*p)
     page += """    </div></body>

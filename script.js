@@ -26,7 +26,13 @@ let abortHandler = function abortHandler(event) {
 
 let uploadFile = function uploadFile() {
     var file = _("file").files[0];
-    alert(file.name+ " | " + file.type + ' | ' + Math.round(file.size / 1024) + ' MiB');
+    var size = Math.round(file.size / 1024 / 1000);
+    var t = ' MiB';
+    if (size > 999){
+      t = ' GiB';
+      size = (size+'').slice(-3) + '.' + (size+'').slice(-3, 0)
+    }
+    alert(file.name+ " | " + file.type + ' | ' + size + t);
     var formdata = new FormData();
     formdata.append("data", file);
     var ajax = new XMLHttpRequest();
@@ -61,4 +67,3 @@ let upvote = function (id) { fetch(`${WEBSITE}/upvote`, { method: 'POST', body: 
 let downvote = function (id) { fetch(`${WEBSITE}/downvote`, { method: 'POST', body: JSON.stringify({ "id": id }) }).then(response => response.json()).then(response => { '' }) };
 
 let points = function (id, i) { fetch(`${WEBSITE}/points?post_id=` + id, { method: 'GET' }).then(response => response.json()).then(response => document.getElementById(i).innerHTML = response + ' points') };
-
