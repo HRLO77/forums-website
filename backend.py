@@ -14,7 +14,7 @@ import aiohttp
 import pathlib
 session: aiohttp.ClientSession = aiohttp.ClientSession
 
-SORT_PIN = '&#128392; Pinned'
+SORT_PIN = '&#128392; Pinned by moderators'
 WEBSITE = "http://127.0.0.1:8000"
 
 
@@ -75,8 +75,8 @@ async def make_post(
         border-color:rgba(95, 158, 160, 0.46);">
             <div>
                 <img src="{WEBSITE}/resource/user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
-                <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%">{title}</p>
-                <p style="margin-left: 1.4%;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
+                <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title}</p>
+                <p style="margin-left: 1.4%;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" <a style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
                 <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↑</button>
                 <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↓</button>
                 <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
@@ -92,28 +92,29 @@ async def make_post(
     <div>
         <p style="text-rendering: optimizeSpeed;color:white;font-family:'Courier New', Courier, monospace;font-size:large;margin-left:3.3%;margin-top:1.5%">	
             {pin}</p>
-        <div style="background-color:black;
-        text-rendering: optimizeSpeed;
-        margin-top:1.5%;
-        margin-left:3.3%;
-        border-radius: 15px;
-        border:0.1%;
-        border-style:solid;
-        color:white;
-        border-color:rgba(95, 158, 160, 0.46);">
-            <div>
-                <img src="{WEBSITE}/resource/user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
-                <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%"{title}</p>
-                <p style="margin-left: 1.4%;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
-                <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="points('{str(id).strip()}', '{rand}');upvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↑</button>
-                <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="points('{str(id).strip()}', '{rand}');downvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↓</button>
-                <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
-            </div>
-            <div style="margin-left:1.75%;font-size:smaller;">
-                <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')()}</p>
+        <div>
+            <div style="background-color:black;
+            text-rendering: optimizeSpeed;
+            margin-top:1.5%;
+            margin-left:3.3%;
+            border-radius: 15px;
+            border:0.1%;
+            border-style:solid;
+            color:white;
+            border-color:rgba(95, 158, 160, 0.46);">
+                <div>
+                    <img src="{WEBSITE}/resource/user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
+                    <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title}</p>
+                    <p style="margin-left: 1.4%;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" <a style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
+                    <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↑</button>
+                    <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↓</button>
+                    <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
+                </div>
+                <div style="margin-left:1.75%;font-size:smaller;">
+                    <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')()}</p>
+                </div>
             </div>
         </div>
-    </div>
     """
 
 
@@ -440,7 +441,7 @@ async def posts(request: fastapi.Request, sortby: str='latest'):
     elif sortby == 'oldest':
         ps, pins = reversed(ps), reversed(pins)
     elif sortby == 'file_oldest':
-       ps, pins = reversed(sorted(ps, key=lambda post: (datepost(post), post[4]!=None),)), sorted(sorted(pins, key=(lambda post: (datepost(post), post[4]!=None)), ))
+       ps, pins = reversed(sorted(ps, key=lambda post: (datepost(post), post[4]!=None),)), sorted(sorted(pins, key=(lambda post: (datepost(post), post[4]!=None)),))
     for p in pins:page+=await make_post(*p)
     for p in ps:page+=await make_post(*p)
     page += """    </div></body>
