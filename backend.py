@@ -230,9 +230,9 @@ async def new(request: fastapi.Request):
     font-family: 'Montserrat', sans-serif;
     ">
         <div>
-            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:100px;">Policy</button></a>
-            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">All posts</button></a>
-            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
+            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-15%">Policy</button></a>
+            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;display:inline-flexbox">All posts</button></a>
+            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;margin-bottom:1%">New post</button></a>
         </div>
     </nav>
     <h1 style='color:white;margin-left:100px;'>New post</h1>
@@ -366,9 +366,9 @@ async def root(request: fastapi.Request):
     font-family: 'Montserrat', sans-serif;
     ">
         <div>
-            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:100px;">Policy</button></a>
-            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">All posts</button></a>
-            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
+            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-15%">Policy</button></a>
+            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;display:inline-flexbox">All posts</button></a>
+            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;margin-bottom:1%">New post</button></a>
         </div>
     </nav>
     <h1 style='margin-left:45%;color:white;'>Root</h1>
@@ -410,9 +410,9 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
         font-family: 'Montserrat', sans-serif;
         ">
             <div>
-            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:100px;">Policy</button></a>
-            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">All posts</button></a>
-            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
+            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-15%">Policy</button></a>
+            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;display:inline-flexbox">All posts</button></a>
+            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;margin-bottom:1%">New post</button></a>
             </div>
         </nav>
     <div class="dropdown">
@@ -429,7 +429,7 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
         
 """ 
     # really fast, efficient splicing of posts for each page!
-    LEN = 20
+    LEN = 25
     ps = [*await get_posts()]
     if LEN*pgn > len(ps):
         return fastapi.responses.JSONResponse({'detail': f'UNKOWN PAGE NUMBER {pgn}'}, 404)
@@ -445,9 +445,6 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
         c+=1
     t=LEN-d
     del d
-
-    ps = ps[t*pgn:t*pgn+t]
-    del t
     datepost = lambda post: datetime.datetime(int(post[3][:4]), int(post[3][5:7]), int(post[3][8:]))
     if sortby == 'score':
         ps, pins = sorted(ps, key=lambda post: len(post[-2]) - len(post[-1]), reverse=True), sorted(pins, key=lambda post: len(post[-2]) - len(post[-1]), reverse=True)
@@ -459,12 +456,15 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
         ps, pins = reversed(ps), reversed(pins)
     elif sortby == 'file_oldest':
        ps, pins = reversed(sorted(ps, key=lambda post: (datepost(post), post[4]!=None),)), sorted(sorted(pins, key=(lambda post: (datepost(post), post[4]!=None)),))
+    ps = ps[t*pgn:t*pgn+t]
+    del t
+
     for p in pins:page+=await make_post(*p)
     for p in ps:page+=await make_post(*p)
     page += f"""
     <br><br><br><br>
-    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn-1}"><button style="color:white;float:left;margin-left:47%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;">&lt;</button></a>
-    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn+1}"><button style="color:white;float:right;margin-right:47%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;">&gt;</button></a>
+    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn-1}"><button style="color:white;float:left;margin-left:47.5%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;">&lt;</button></a>
+    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn+1}"><button style="color:white;float:right;margin-right:47.5%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;">&gt;</button></a>
     </div>
 </body>
 </body>
@@ -512,9 +512,9 @@ async def post(request: fastapi.Request, post: str):
         font-family: 'Montserrat', sans-serif;
         ">
             <div>
-            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:100px;">Policy</button></a>
-            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">All posts</button></a>
-            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(98, 0, 255, 0.485);float:right;margin-right:40px;">New post</button></a>
+            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-15%">Policy</button></a>
+            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;display:inline-flexbox">All posts</button></a>
+            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;margin-bottom:1%">New post</button></a>
             </div>
         </nav>
     <div class="dropdown">
