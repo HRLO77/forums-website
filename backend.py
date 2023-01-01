@@ -8,10 +8,11 @@ from slowapi import util
 import string
 import json
 import random
-import os
 import aiofiles
 import aiohttp
-import pathlib
+import gzip
+from aiofiles import os
+import tracemalloc
 session: aiohttp.ClientSession = aiohttp.ClientSession
 
 SORT_PIN = '&#128392; Pinned'
@@ -127,6 +128,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.on_event("startup")
 async def start(*args, **kwargs):
+    tracemalloc.start()
     await start_conn()
     global session
     session = aiohttp.ClientSession()
@@ -273,36 +275,40 @@ async def form(
     if file.filename != "":
         contents = await file.read()
         async def is_too_big(b: bytes, name):
-            '''Checks if a file is more than 1 GiB in size, and is a valid file.'''
+            '''Checks if a file is more than 2 GiB in size after gzip compression, and is a valid file.'''
+            size = 1024*2+1
             try:
                 async with aiofiles.open(name, 'x'):pass
                 try:
-                    async with aiofiles.open(name, 'wb') as f:await f.write(b)
-                except Exception:
-                    try:
-                        os.remove(name)
-                    except Exception:pass
-                    return True
-                stat = os.stat(name)
-                os.remove(name)
-                return stat.st_size / (1024 * 1024) > 1024
-            except Exception:
-                os.remove(name)
-                return True
 
-        if (await is_too_big(contents, file.filename)):
-            return fastapi.responses.JSONResponse({"detail": "FILE MUST BE UNDER 1 GIGABYTE"}, 413)
+                    async with aiofiles.open(name, 'wb') as f:await f.write(b)
+                    size = (await os.stat(name)).st_size / (1024 * 1024)
+                except Exception:
+                    try:await os.remove(name)
+                    except Exception:pass
+                    return True, size
+                try:await os.remove(name)
+                except Exception:pass
+                return size > 1024*2, size
+            except Exception:
+                await os.remove(name)
+                
+                return True, size
+        try:contents=await asyncio.to_thread(gzip.compress, contents)
+        except Exception:pass
+        res = await is_too_big(contents, file.filename)
+        if (res[0]):
+            return fastapi.responses.JSONResponse({"detail": f"FILE MUST BE UNDER 2 GIGABYTES AFTER COMPRESSION, FILE WAS {res[1]//1024}.{res[1]%1024} GiB"}, 413)
         else:
             id = "".join(random.sample(string.ascii_letters, k=52))
             while True:
-                if os.path.isfile(f"{id}_{file.filename}"):
+                if await os.path.isfile(f"{id}_{file.filename}"):
                     id = "".join(random.sample(string.ascii_letters, k=52))
                 else:
                     break
             if len(await split(f"{id}_{file.filename}")) > 1:return fastapi.responses.JSONResponse({"detail": "FILENAME TOO LARGE"}, 413)
             async with aiofiles.open(f"{id}_{file.filename}", 'x') as f:pass
-            async with aiofiles.open(f"{id}_{file.filename}", 'wb') as f:
-                await f.write(contents)
+            async with aiofiles.open(f"{id}_{file.filename}", 'wb') as f:await f.write(contents)
     if len(await split(title, 300)) > 1:
         return fastapi.responses.JSONResponse({"detail":"TITLE TOO LARGE"}, 413)
     title = "".join(
@@ -379,7 +385,7 @@ async def shutdown(*args, **kwargs):
 
 @app.get("/posts")
 @limiter.limit("60/minute")
-async def posts(request: fastapi.Request, sortby: str='latest'):
+async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     valids = {'latest', 'score', 'length', 'file', 'oldest', 'file_oldest'}
     if not sortby.lower() in valids:return fastapi.responses.JSONResponse({'detail': 'INVALID SORT TYPE', 'sorts': f'{valids}'}, 404)
     page = f"""<!DOCTYPE html>
@@ -421,16 +427,27 @@ async def posts(request: fastapi.Request, sortby: str='latest'):
         </div>
     </div>
         
-"""
+""" 
+    # really fast, efficient splicing of posts for each page!
+    LEN = 20
     ps = [*await get_posts()]
+    if LEN*pgn > len(ps):
+        return fastapi.responses.JSONResponse({'detail': f'UNKOWN PAGE NUMBER {pgn}'}, 404)
     pins = []
     c = 0  # save on iterations
     
+    d=0
     for i in ps:
         if i[6] == SORT_PIN:  # 7th index is pin message
             pins += [i]
+            d+=1
             ps.pop(c)
         c+=1
+    t=LEN-d
+    del d
+
+    ps = ps[t*pgn:t*pgn+t]
+    del t
     datepost = lambda post: datetime.datetime(int(post[3][:4]), int(post[3][5:7]), int(post[3][8:]))
     if sortby == 'score':
         ps, pins = sorted(ps, key=lambda post: len(post[-2]) - len(post[-1]), reverse=True), sorted(pins, key=lambda post: len(post[-2]) - len(post[-1]), reverse=True)
@@ -444,7 +461,12 @@ async def posts(request: fastapi.Request, sortby: str='latest'):
        ps, pins = reversed(sorted(ps, key=lambda post: (datepost(post), post[4]!=None),)), sorted(sorted(pins, key=(lambda post: (datepost(post), post[4]!=None)),))
     for p in pins:page+=await make_post(*p)
     for p in ps:page+=await make_post(*p)
-    page += """    </div></body>
+    page += f"""
+    <br><br><br><br>
+    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn-1}"><button style="color:white;float:left;margin-left:47%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;">&lt;</button></a>
+    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn+1}"><button style="color:white;float:right;margin-right:47%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;">&gt;</button></a>
+    </div>
+</body>
 </body>
 </html>"""
     return fastapi.responses.HTMLResponse(page)
@@ -455,7 +477,13 @@ async def fetch_resource(resource: str):
     if resource.strip() in {DATABASE, INJECT, BACKUP} or '/' in resource.strip() or '\\' in resource.strip():
         return fastapi.responses.JSONResponse({"detail": "ACCESS DENIED"}, 403)
     else:
-        return fastapi.responses.FileResponse(resource)
+        async def stream(file: str):
+            async with aiofiles.open(file, 'rb') as rb:
+                contents = await rb.read()
+                try:contents = await asyncio.to_thread(gzip.decompress, contents)
+                except Exception:pass
+                yield contents
+        return fastapi.responses.StreamingResponse(stream(resource))
 
 
 @app.get("/post/{post}")
