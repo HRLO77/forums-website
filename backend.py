@@ -230,7 +230,7 @@ async def new(request: fastapi.Request):
     font-family: 'Montserrat', sans-serif;
     ">
         <div>
-            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-15%">Policy</button></a>
+            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-17.5%">Policy</button></a>
             <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;display:inline-flexbox">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;margin-bottom:1%">New post</button></a>
         </div>
@@ -366,7 +366,7 @@ async def root(request: fastapi.Request):
     font-family: 'Montserrat', sans-serif;
     ">
         <div>
-            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-15%">Policy</button></a>
+            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-17.5%">Policy</button></a>
             <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;display:inline-flexbox">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;margin-bottom:1%">New post</button></a>
         </div>
@@ -410,7 +410,7 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
         font-family: 'Montserrat', sans-serif;
         ">
             <div>
-            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-15%">Policy</button></a>
+            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-17.5%">Policy</button></a>
             <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;display:inline-flexbox">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;margin-bottom:1%">New post</button></a>
             </div>
@@ -426,7 +426,6 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
             <a href="{WEBSITE}/posts?sortby=file_oldest">File Oldest</a>
         </div>
     </div>
-        
 """ 
     # really fast, efficient splicing of posts for each page!
     LEN = 25
@@ -463,8 +462,8 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     for p in ps:page+=await make_post(*p)
     page += f"""
     <br><br><br><br>
-    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn-1}"><button style="color:white;float:left;margin-left:47.5%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;">&lt;</button></a>
-    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn+1}"><button style="color:white;float:right;margin-right:47.5%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;">&gt;</button></a>
+    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn-1}"><button style="color:white;float:left;margin-left:45%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;">&lt;</button></a>
+    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn+1}"><button style="color:white;float:right;margin-right:49%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;">&gt;</button></a>
     </div>
 </body>
 </body>
@@ -512,7 +511,7 @@ async def post(request: fastapi.Request, post: str):
         font-family: 'Montserrat', sans-serif;
         ">
             <div>
-            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-15%">Policy</button></a>
+            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-17.5%">Policy</button></a>
             <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;display:inline-flexbox">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;margin-bottom:1%">New post</button></a>
             </div>
