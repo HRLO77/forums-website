@@ -288,8 +288,7 @@ async def form(
                     except Exception:pass
                     return True, size
                 try:
-                if size > 1014*2:
-                    await os.remove(name)
+                    if size > 1024*2:await os.remove(name)
                 except Exception:pass
                 return size > 1024*2, size
             except Exception:
