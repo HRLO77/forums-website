@@ -287,7 +287,9 @@ async def form(
                     try:await os.remove(name)
                     except Exception:pass
                     return True, size
-                try:await os.remove(name)
+                try:
+                if size > 1014*2:
+                    await os.remove(name)
                 except Exception:pass
                 return size > 1024*2, size
             except Exception:
@@ -307,8 +309,7 @@ async def form(
                 else:
                     break
             if len(await split(f"{id}_{file.filename}")) > 1:return fastapi.responses.JSONResponse({"detail": "FILENAME TOO LARGE"}, 413)
-            async with aiofiles.open(f"{id}_{file.filename}", 'x') as f:pass
-            async with aiofiles.open(f"{id}_{file.filename}", 'wb') as f:await f.write(contents)
+            await os.rename(file.filename, f"{id}_{file.filename}")
     if len(await split(title, 300)) > 1:
         return fastapi.responses.JSONResponse({"detail":"TITLE TOO LARGE"}, 413)
     title = "".join(
