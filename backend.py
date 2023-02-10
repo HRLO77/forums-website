@@ -200,8 +200,8 @@ async def downvote(request: fastapi.Request, id: bytes = fastapi.Body()):
         return fastapi.responses.JSONResponse({"detail": f"{e}"}, 500)
 
 @app.post('/fmd')
-@limiter.limit('60/min')
-async def fmd(request: fastapi.Request, data: bytes=b'data'):
+@limiter.limit('10/min')
+async def fmd(request: fastapi.Request, data: fastapi.UploadFile=fastapi.File()):
     pass
 
 @app.get("/new")
