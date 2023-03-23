@@ -34,13 +34,9 @@ async def handler(data: dict | list, t: int, clean: bool=False):
             data.update({'type': t})
             try:
                 file = dat['file']
-                function = dat['function']
-                asc = dat['async']
                 threaded = dat['threaded']
-                assert isinstance(asc, bool)
                 assert isinstance(threaded, bool)
                 assert (await os.path.isfile(file)) or await os.path.isfile('flows/'+file.replace('/', ''))
-                assert isinstance(function, str)
             except (KeyError, AssertionError) as e:pass
             else:
                 try:
@@ -48,23 +44,17 @@ async def handler(data: dict | list, t: int, clean: bool=False):
                         file = glob.glob(f'./**/{file}', recursive=True)[0]
                     async with aiofiles.open(file) as f:
                         code = await f.read()
-                        assert function in code, "Code must contain execution function."
-                    i = ''.join(random.sample(string.ascii_letters, k=52)) + '.py'
-                    async with aiofiles.open(i, 'w') as f:
+                    fg = ''.join(random.sample(string.ascii_letters, k=52)) + '.py'
+                    async with aiofiles.open(fg, 'w') as f:
                         await f.write(code)
-                    sys.
-                    mod = importlib.import_module(i)
-                    await os.remove(i)
-                    if not hasattr(mod, function):
-                        raise AttributeError(f'Expected {"async "*int(asc)}function {function} in flow {flow}, file {file}')
-                    func = getattr(mod, function)
-                    if asc and not(asyncio.iscoroutine(function)):raise TypeError(f'Flow {flow} expected coroutine {function} in {file}, got type {type(func)} instead.')
-                    if not(asc) and not(callable(func)):raise AttributeError(f'Expected function {function} in flow {flow}, file {file}, got type {type(func)} instead.')
-                    if not asc and not threaded:func(data)
-                    elif threaded and asc:raise TypeError(f'Coroutine {func} cannot be executed on a seperate thread')
-                    elif threaded and not(asc):await asyncio.to_thread(func, [data])
-                    elif asc and not(threaded): await func(data)
-                    print(f'Flow {flow} executed {"async "*int(asc)}function {function} given type data {t} on {datetime.datetime.utcnow()} UTC.')
+                    await os.remove(fg)
+                    g = {i:v for i,v in globals().items()}
+                    g['DATA'] = data
+                    if threaded:
+                        await asyncio.to_thread(exec, [code, g, {i:v for i,v in locals().items()}])
+                    else:
+                        exec(code, g, {i:v for i,v in locals().items()})
+                    print(f'Flow {flow} executed {file} given type data {t} on {datetime.datetime.utcnow()} UTC.')
                 except Exception as e:
                     print(f'Error when executing function for flow {flow}: {str(e)}')
                     raise e
