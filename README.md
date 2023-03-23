@@ -51,6 +51,10 @@ file - The file to associate with the post.
 ## GET endpoints
 All GET endpoints are ratelimited to 60/minute.
 
+* /raw/
+
+Returns all of the posts in the database in JSON format
+
 * /posts/
 
 Returns HTML page with all the posts.
