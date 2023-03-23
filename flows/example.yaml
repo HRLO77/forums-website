@@ -1,0 +1,8 @@
+# valid events are {'*', 'vote', 'post', 'delete'}
+name_here:
+  event: "post" # the event (see README)
+  file: "bot.py" # optional
+  function: "main"
+  async: true
+  address: "http://127.0.0.1:8001" # the endpoint to send the data to
+  threaded: false

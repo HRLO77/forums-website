@@ -13,7 +13,8 @@ import aiohttp
 import gzip
 from aiofiles import os
 import tracemalloc
-session: aiohttp.ClientSession = aiohttp.ClientSession
+import subprocess
+
 
 SORT_PIN = '&#128392; Pinned'
 WEBSITE = "http://127.0.0.1:8000"
@@ -128,10 +129,15 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 @app.on_event("startup")
 async def start(*args, **kwargs):
-    tracemalloc.start()
-    await start_conn()
     global session
+    tracemalloc.start()
     session = aiohttp.ClientSession()
+    await start_conn()
+    try:
+        await asyncio.to_thread(subprocess.run, ['python', 'flow_loader.py'])
+    except Exception:
+        pass
+    await asyncio.to_thread(load_flows)
 
 
 @app.middleware("http")
@@ -379,6 +385,7 @@ async def root(request: fastapi.Request):
 
 @app.on_event("shutdown")
 async def shutdown(*args, **kwargs):
+    global session
     await close()
     await session.close()
 

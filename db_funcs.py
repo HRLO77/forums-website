@@ -1,4 +1,5 @@
-import os
+from aiofiles import os
+import aiofiles
 import glob
 import asyncio
 import typing
@@ -9,11 +10,77 @@ import string
 import aiosqlite
 import re
 import pickle
+import aiohttp
+import json
+import uuid
+import importlib
 
 DATABASE = "database.sqlite3"
 BACKUP = "backup.sqlite3"
 INJECT = "inject.sqlite3"
+FLOWS = {}
 cursor: aiosqlite.Connection = aiosqlite.connect(DATABASE)
+session: aiohttp.ClientSession = aiohttp.ClientSession
+
+async def handler(data: dict | list, t: int, clean: bool=False):
+    '''Handles stupid flow shit you dont want to do: {'*': 0, 'vote': 1, 'post': 2, 'delete': 3}'''
+    global session
+    types = {'*': 0, 'vote': 1, 'post': 2, 'delete': 3}
+    for (flow, dat) in FLOWS.items():
+        
+        if types[dat['event'].lower()] == t or types[dat['event'].lower()] == 0:
+            if clean:data: dict = {data[0]: [*data[1:4], *data[6:-2], len(data[-2])-len(data[-1])]}
+            data.update({'type': t})
+            try:
+                file = dat['file']
+                function = dat['function']
+                asc = dat['async']
+                threaded = dat['threaded']
+                assert isinstance(asc, bool)
+                assert isinstance(threaded, bool)
+                assert (await os.path.isfile(file)) or await os.path.isfile('flows/'+file.replace('/', ''))
+                assert isinstance(function, str)
+            except (KeyError, AssertionError) as e:
+                pass
+            else:
+                try:
+                    if not (await os.path.isfile(file)):
+                        file = glob.glob(f'./**/{file}', recursive=True)[0]
+                    async with aiofiles.open(file) as f:
+                        code = await f.read()
+                        assert function in code, "Code must contain execution function."
+                    i = random.sample(string.ascii_letters, k=52)
+                    async with aiofiles.open(i, 'w') as f:
+                        await f.write(code)
+                    mod = importlib.reload(importlib.import_module(i))
+                    await os.remove(i)
+                    if not hasattr(mod, function):
+                        raise AttributeError(f'Expected {"async "*int(asc)}function {function} in flow {flow}, file {file}')
+                    func = getattr(mod, function)
+                    if asc and not(asyncio.iscoroutine(function)):
+                        raise TypeError(f'Flow {flow} expected coroutine {function} in {file}, got type {type(func)} instead.')
+                    if not(asc) and not(callable(func)):
+                        raise AttributeError(f'Expected function {function} in flow {flow}, file {file}, got type {type(func)} instead.')
+                    if not asc and threaded:func(data)
+                    elif threaded and asc:raise TypeError(f'Coroutine {func} cannot be executed on a seperate thread')
+                    elif threaded and not(asc):await asyncio.to_thread(func, [data])
+                    elif asc and not(threaded): await func(data)
+                    print(f'Flow {flow} executed {"async "*int(asc)}function {function} given type data {t} on {datetime.datetime.utcnow()} UTC.')
+                except Exception as e:
+                    print(f'Error when executing function for flow {flow}: {str(e)}')
+            async with session.post(dat['address'], json.dumps(data)) as _:
+                pass
+            print(f'Flow {flow} send {dat["address"]} type data {t} on {datetime.datetime.utcnow()} UTC.')
+            print(f'Flow {flow} finished on {datetime.datetime.utcnow()} UTC.')       
+def load_flows():
+    global FLOWS
+    try:
+        with open('flows.pickle', 'rb') as f:
+            FLOWS = pickle.load(f)
+        __import__('os').remove('flows.pickle')
+    except Exception as e:
+        print(f'Error loading flows in db_funcs: {str(e)}')
+
 async def rm_files_ids(ids: list[str] | tuple[str] | set[str], fps_passed: bool=False):
     """Removes all files to the corresponding post ids provided.
     :param ids: file paths to files, or post ids."""
@@ -21,23 +88,22 @@ async def rm_files_ids(ids: list[str] | tuple[str] | set[str], fps_passed: bool=
     for i in ids:
         if isinstance(i, str):
             match = re.match('([a-zA-Z]{52})', i)
-            if os.path.isfile(i) and match!=None:
-                os.remove(i)
+            if (await os.path.isfile(i)) and match!=None:
+                await os.remove(i)
                 
-        
 async def start_conn():
-    global cursor
+    global cursor, session
+    
     cursor = await aiosqlite.connect(DATABASE)
     # locale = {'.\\database.sqlite3', '.\\rep_reg.py', '.\\script.js', '.\\db_funcs.py', '.\\requirements.txt', '.\\backend.py', '.\\LICENSE', '.\\__main__.py', '.\\backup.sqlite3', '.\\maintenence', '.\\clear.py', '.\\tests', '.\\__pycache__', '.\\Privacy Policy', '.\\README.md', '.\\user.jpeg', '.\\inject.sqlite3'}
     posts = await get_posts()
     files = {i[-5] for i in posts}
     for i in glob.glob('*'):
         match = re.match('^([a-zA-Z]{52})', i)
-        if os.path.isfile(i) and match!=None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
+        if (await os.path.isfile(i)) and match!=None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
             if not i in files:
-                os.remove(i)
+                await os.remove(i)
     
-
 async def back(to: str):
     """Backups the main database to the database fp provided."""
     to: aiosqlite.Connection = await aiosqlite.connect(to)
@@ -117,7 +183,9 @@ async def new_post(
         [id, title, content, date, fp, ip, pin, "{}", "{}"],
     )
     await update_inject()
-    return await get_post(id)
+    d = await get_post(id)
+    await handler(d, 2, True)
+    return d
 
 
 async def delete_ip(ip: str) -> tuple[str, int]:
@@ -171,6 +239,7 @@ async def delete_post(
     await cursor.execute("DELETE FROM posts WHERE id=?;", [id])
     await rm_files_ids({post[-5]}, True)
     await update_inject()
+    await handler(post, 3, True)
     return post
 
 async def delete_posts(
@@ -178,7 +247,10 @@ async def delete_posts(
 ) -> typing.AsyncGenerator[tuple[str, str, str, str, str, str, str, set[str], set[str]], None,]:
     """Removes multiple posts by ids from the database, returns the database rows as a tuple before deletion."""
     ids = {i for i in (await get_posts()) if i[0] in ids}  # type: ignore
-    await rm_file_ids({i[-5] for i in ids}, True) 
+    await rm_file_ids({i[-5] for i in ids}, True)
+    p = filter((lambda x: x[0] in ids), await get_posts())
+    p = map((lambda x: (x[0], (*x[1:4], *x[6:-2], len(x[-1])-len(x[-2])))), p)
+    await handler(dict(p), 3)
     for post in ids:
         await cursor.execute("DELETE FROM posts WHERE id=?;", [post[0]])
         await update_inject()
@@ -248,9 +320,11 @@ async def add_upvote(ip: str, id: str):
     post = await get_post(id)
     # order of post
     # id, title, content, date, fp, ip, pin, upvotes, downvotes
-    return await update_post(
+    d = await update_post(
         id, post[1], post[2], post[3], ip, {*post[-2], ip}, post[-1], post[4], post[-3], 
     )
+    await handler(d, 1, True)
+    return d
 
 
 async def remove_upvote(ip: str, id: str):
@@ -261,30 +335,38 @@ async def remove_upvote(ip: str, id: str):
         upvotes.remove(ip)
     except Exception:
         pass
-    return await update_post(
+    d = await update_post(
         id, post[1], post[2], post[3], ip, upvotes, post[-1], post[4], post[-3]
     )
+    await handler(d, 1, True)
+    return d
 
 
 async def add_downvote(ip: str, id: str):
     """Adds a downvote to post id provided."""
     post = await get_post(id)
-    return await update_post(
+    d = await update_post(
         id, post[1], post[2], post[3], ip, post[-2], {*post[-1], ip}, post[4], post[-3]
     )
-
+    await handler(d, 1, True)
+    return d
 
 async def remove_downvote(ip: str, id: str):
     """Removes an downvote from the id provided."""
     post = await get_post(id)
     downvotes = post[-1]
+    t = 0
     try:
         downvotes.remove(ip)
+        t=1
     except Exception:
         pass
-    return await update_post(
+    d = await update_post(
         id, post[1], post[2], post[3], ip, post[-2], downvotes, post[4], post[-3]
     )
+    if t:
+        await handler(d, 1, True)
+    return d
 
 
 async def purge_ip(ip: str) -> list[tuple[str, str, str, str, str, str, set[str], set[str]]]:
@@ -294,6 +376,9 @@ async def purge_ip(ip: str) -> list[tuple[str, str, str, str, str, str, set[str]
     ).fetchall()
     await rm_files_ids({i[-5] for i in posts}, True)
     await cursor.execute("DELETE FROM posts WHERE ip=?", [ip])
+    p = filter((lambda x: x[0] in {i[-5] for i in posts}), await get_posts())
+    p = map((lambda x: (x[0], (*x[1:4], *x[6:-2], len(x[-1])-len(x[-2])))), p)
+    await handler(dict(p), 3)
     return posts # type: ignore
 
 
@@ -340,10 +425,10 @@ async def close():
     files = {i[-5] for i in posts}
     for i in glob.glob('*'):
         match = re.match('^([a-zA-Z]{52})', i)
-        if os.path.isfile(i) and match!=None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
+        if (await os.path.isfile(i)) and match!=None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
             if not i in files:
                 # print('requirements met', i)
-                os.remove(i)
+                await os.remove(i)
     await cursor.commit()
     await cursor.close()
 
@@ -355,10 +440,10 @@ if __name__ == "__main__":
         await start_backup()
         if "y" in input("Perform database tests? (Y/N): ").lower():
             pickled: tuple[bytes] = pickle.load(open('./data.pickle', 'rb'))
-            if not os.path.isfile('cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg'):
+            if not (await os.path.isfile('cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg')):
                 open('cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg', 'x')
                 open('cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg', 'wb').write(pickled[0])
-            if not os.path.isfile('RTSpMXFavdrLEuACcNZjhgmoqxHKbkGtDIeywQnYJWVBszPOUfli_requirements.txt'):
+            if not (await os.path.isfile('RTSpMXFavdrLEuACcNZjhgmoqxHKbkGtDIeywQnYJWVBszPOUfli_requirements.txt')):
                 open('RTSpMXFavdrLEuACcNZjhgmoqxHKbkGtDIeywQnYJWVBszPOUfli_requirements.txt', 'x')
                 open('RTSpMXFavdrLEuACcNZjhgmoqxHKbkGtDIeywQnYJWVBszPOUfli_requirements.txt', 'wb').write(pickled[1])
             print(await get_posts(), await get_ips())
