@@ -6,3 +6,6 @@ uvicorn
 python-multipart
 aiohttp
 pyyaml
+aiohttp[speedups]
+aiodns
+cchardet

@@ -6,3 +6,4 @@ async def main(data):
     print(f'I recieved data {data}')
     print('Hello!')
     return
+print('I have been loaded!')

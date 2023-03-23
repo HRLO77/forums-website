@@ -14,13 +14,14 @@ import aiohttp
 import json
 import uuid
 import importlib
-
+import sys
+sys.path.append(__import__('os').getcwd())
 DATABASE = "database.sqlite3"
 BACKUP = "backup.sqlite3"
 INJECT = "inject.sqlite3"
 FLOWS = {}
 cursor: aiosqlite.Connection = aiosqlite.connect(DATABASE)
-session: aiohttp.ClientSession = aiohttp.ClientSession
+session: aiohttp.ClientSession | None = None
 
 async def handler(data: dict | list, t: int, clean: bool=False):
     '''Handles stupid flow shit you dont want to do: {'*': 0, 'vote': 1, 'post': 2, 'delete': 3}'''
@@ -40,8 +41,7 @@ async def handler(data: dict | list, t: int, clean: bool=False):
                 assert isinstance(threaded, bool)
                 assert (await os.path.isfile(file)) or await os.path.isfile('flows/'+file.replace('/', ''))
                 assert isinstance(function, str)
-            except (KeyError, AssertionError) as e:
-                pass
+            except (KeyError, AssertionError) as e:pass
             else:
                 try:
                     if not (await os.path.isfile(file)):
@@ -49,29 +49,29 @@ async def handler(data: dict | list, t: int, clean: bool=False):
                     async with aiofiles.open(file) as f:
                         code = await f.read()
                         assert function in code, "Code must contain execution function."
-                    i = random.sample(string.ascii_letters, k=52)
+                    i = ''.join(random.sample(string.ascii_letters, k=52)) + '.py'
                     async with aiofiles.open(i, 'w') as f:
                         await f.write(code)
-                    mod = importlib.reload(importlib.import_module(i))
+                    sys.
+                    mod = importlib.import_module(i)
                     await os.remove(i)
                     if not hasattr(mod, function):
                         raise AttributeError(f'Expected {"async "*int(asc)}function {function} in flow {flow}, file {file}')
                     func = getattr(mod, function)
-                    if asc and not(asyncio.iscoroutine(function)):
-                        raise TypeError(f'Flow {flow} expected coroutine {function} in {file}, got type {type(func)} instead.')
-                    if not(asc) and not(callable(func)):
-                        raise AttributeError(f'Expected function {function} in flow {flow}, file {file}, got type {type(func)} instead.')
-                    if not asc and threaded:func(data)
+                    if asc and not(asyncio.iscoroutine(function)):raise TypeError(f'Flow {flow} expected coroutine {function} in {file}, got type {type(func)} instead.')
+                    if not(asc) and not(callable(func)):raise AttributeError(f'Expected function {function} in flow {flow}, file {file}, got type {type(func)} instead.')
+                    if not asc and not threaded:func(data)
                     elif threaded and asc:raise TypeError(f'Coroutine {func} cannot be executed on a seperate thread')
                     elif threaded and not(asc):await asyncio.to_thread(func, [data])
                     elif asc and not(threaded): await func(data)
                     print(f'Flow {flow} executed {"async "*int(asc)}function {function} given type data {t} on {datetime.datetime.utcnow()} UTC.')
                 except Exception as e:
                     print(f'Error when executing function for flow {flow}: {str(e)}')
-            async with session.post(dat['address'], json.dumps(data)) as _:
-                pass
+                    raise e
+            async with session.post(dat['address'], data=json.dumps(data)) as _:pass
             print(f'Flow {flow} send {dat["address"]} type data {t} on {datetime.datetime.utcnow()} UTC.')
-            print(f'Flow {flow} finished on {datetime.datetime.utcnow()} UTC.')       
+            print(f'Flow {flow} finished on {datetime.datetime.utcnow()} UTC.')
+            
 def load_flows():
     global FLOWS
     try:
@@ -97,6 +97,7 @@ async def start_conn():
     cursor = await aiosqlite.connect(DATABASE)
     # locale = {'.\\database.sqlite3', '.\\rep_reg.py', '.\\script.js', '.\\db_funcs.py', '.\\requirements.txt', '.\\backend.py', '.\\LICENSE', '.\\__main__.py', '.\\backup.sqlite3', '.\\maintenence', '.\\clear.py', '.\\tests', '.\\__pycache__', '.\\Privacy Policy', '.\\README.md', '.\\user.jpeg', '.\\inject.sqlite3'}
     posts = await get_posts()
+    session = aiohttp.ClientSession()
     files = {i[-5] for i in posts}
     for i in glob.glob('*'):
         match = re.match('^([a-zA-Z]{52})', i)
@@ -353,6 +354,7 @@ async def add_downvote(ip: str, id: str):
 
 async def remove_downvote(ip: str, id: str):
     """Removes an downvote from the id provided."""
+    
     post = await get_post(id)
     downvotes = post[-1]
     t = 0
@@ -421,6 +423,8 @@ async def rep_post(
     
 async def close():
     """Closes connection to database."""
+    global session
+    await session.close()
     posts = await get_posts()
     files = {i[-5] for i in posts}
     for i in glob.glob('*'):

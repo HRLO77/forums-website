@@ -131,12 +131,10 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 async def start(*args, **kwargs):
     global session
     tracemalloc.start()
-    session = aiohttp.ClientSession()
     await start_conn()
-    try:
-        await asyncio.to_thread(subprocess.run, ['python', 'flow_loader.py'])
-    except Exception:
-        pass
+    session = aiohttp.ClientSession()
+    try:await asyncio.to_thread(subprocess.run, ['python', 'flow_loader.py'])
+    except Exception:pass
     await asyncio.to_thread(load_flows)
 
 
@@ -281,6 +279,7 @@ async def form(
     content: str = fastapi.Form(),
     file: fastapi.UploadFile = fastapi.File(),
 ):
+    global session
     if (await is_inject(title)) or (await is_inject(content)):
         return fastapi.responses.JSONResponse({"detail":"SQL INJECT DETECTED"}, 403)
     id: str = ""
