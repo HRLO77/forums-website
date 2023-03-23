@@ -96,7 +96,7 @@ To deploy this, follow the instructions in the Dockerfile within this directory 
 *Flows* are an intuitive, easy and fast way to execute code and send data when events occur. Some purposes may be, a moderation flow to moderate posts, logging flow to log all events that occur on a remote server, and more!
 
 
-A flows' structure is defined in a .yml or .yaml format files in `./flows`, it is as presented.
+A flows' structure is defined in .yml or .yaml files in `./flows`, it is as presented.
 
 
 ```yaml
