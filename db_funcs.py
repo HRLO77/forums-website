@@ -24,7 +24,7 @@ cursor: aiosqlite.Connection = aiosqlite.connect(DATABASE)
 session: aiohttp.ClientSession | None = None
 
 async def handler(data: dict | list, t: int, clean: bool=False):
-    '''Handles stupid flow shit you dont want to do: {'*': 0, 'vote': 1, 'post': 2, 'delete': 3}'''
+    '''Handles flow data you dont want to: {'*': 0, 'vote': 1, 'post': 2, 'delete': 3}'''
     global session
     types = {'*': 0, 'vote': 1, 'post': 2, 'delete': 3}
     for (flow, dat) in FLOWS.items():
@@ -58,8 +58,9 @@ async def handler(data: dict | list, t: int, clean: bool=False):
                 except Exception as e:
                     print(f'Error when executing function for flow {flow}: {str(e)}')
                     raise e
-            async with session.post(dat['address'], data=json.dumps(data)) as _:pass
-            print(f'Flow {flow} send {dat["address"]} type data {t} on {datetime.datetime.utcnow()} UTC.')
+            if dat.get('address') is not None:
+                async with session.post(dat['address'], data=json.dumps(data)) as _:pass
+                print(f'Flow {flow} send {dat["address"]} type data {t} on {datetime.datetime.utcnow()} UTC.')
             print(f'Flow {flow} finished on {datetime.datetime.utcnow()} UTC.')
             
 def load_flows():
