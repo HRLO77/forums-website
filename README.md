@@ -105,7 +105,7 @@ A flows' structure is defined in .yml or .yaml files in `./flows`, it is as pres
 
 ```yaml
 FLOW_NAME_HERE: # the name of the flow, should be short and summarize the purpose of it (i.e moderation_flow, pin_flow, statistics)
-    event: "*" # valid events are "*" (All of the possible events), "post" (when a post is created) "vote" (when the score of a post changes) and "delete" (when a single or multiple posts are removed, this excludes author purges or bans)
+    event: "*" # valid events are "*" (All of the possible events), "post" (when a post is created) "vote" (when the score of a post changes) and "delete" (when a single or multiple posts are removed)
     file: "FILE_NAME.py" # the name of the script to execute when an event is run (optional)
     address: "http://127.0.0.1:8001" # the address to send the json data to (the same data is given to the file to execute, if provided), this is optional
     threaded: true # a boolean, if true, the file is run on a seperate thread (concurrent), otherwise it is run on the same thread (blocking.), this is optional.
