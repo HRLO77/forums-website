@@ -1,5 +1,5 @@
 # website
-A website to post anonymous tips (about school because I dunno how to pass english).
+A forums website, backend written in python, minimal data collection, with efficient and easy to implement features.
 
 To change website address, change the `WEBSITE` constant in `script.js` and `backend.py`.
 ## Managing posts
