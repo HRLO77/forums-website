@@ -112,7 +112,7 @@ FLOW_NAME_HERE: # the name of the flow, should be short and summarize the purpos
 ```
 
 
-If a file is provided and exists in `./flows`, a variable is injected in the globals of the script with the identifier `DATA`, it contains the json data of the event.
+If a file is provided and exists in `./flows`, all global and local variables from the database and server process are made available to the script being executed, as well as a variable with the identifier `DATA`, it contains the json data of the event.
 
 * *Note:* All data provided has the type of event being sent as the `"type"` key in the json, values are
 `0: "*", 1: "vote", 2: "post", 3: "delete"`
