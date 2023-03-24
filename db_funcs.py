@@ -240,18 +240,12 @@ async def delete_posts(
     """Removes multiple posts by ids from the database, returns the database rows as a tuple before deletion."""
     ids = {i for i in (await get_posts()) if i[0] in ids}  # type: ignore
     await rm_file_ids({i[-5] for i in ids}, True)
-    p = filter((lambda x: x[0] in ids), await get_posts())
-    p = map((lambda x: (x[0], (*x[1:4], *x[6:-2], len(x[-1])-len(x[-2])))), p)
+    p = map((lambda x: (x[0], (*x[1:4], *x[6:-2], len(x[-1])-len(x[-2])))), filter((lambda x: x[0] in ids), await get_posts()))
     await handler(dict(p), 3)
     for post in ids:
         await cursor.execute("DELETE FROM posts WHERE id=?;", [post[0]])
         await update_inject()
         yield post  # type: ignore
-
-
-async def to_thread(func: typing.Callable, *args, **kwargs):
-    """Runs a blocking function on another thread and returns the result."""
-    return await asyncio.to_thread(func, *args, **kwargs)
 
 
 async def update_post(
@@ -369,8 +363,7 @@ async def purge_ip(ip: str) -> list[tuple[str, str, str, str, str, str, set[str]
     ).fetchall()
     await rm_files_ids({i[-5] for i in posts}, True)
     await cursor.execute("DELETE FROM posts WHERE ip=?", [ip])
-    p = filter((lambda x: x[0] in {i[-5] for i in posts}), await get_posts())
-    p = map((lambda x: (x[0], (*x[1:4], *x[6:-2], len(x[-1])-len(x[-2])))), p)
+    p = map((lambda x: (x[0], (*x[1:4], *x[6:-2], len(x[-1])-len(x[-2])))), filter((lambda x: x[0] in {i[-5] for i in posts}), await get_posts()))
     await handler(dict(p), 3)
     return posts # type: ignore
 
