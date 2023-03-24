@@ -30,7 +30,7 @@ async def handler(data: dict | list, t: int, clean: bool=False):
     for (flow, dat) in FLOWS.items():
         
         if types[dat['event'].lower()] == t or types[dat['event'].lower()] == 0:
-            if clean:data: dict = {data[0]: [*data[1:4], *data[6:-2], len(data[-2])-len(data[-1])]}
+            if clean:data: dict = {data[0]: [*data[1:5], *data[6:-2], len(data[-2])-len(data[-1])]}
             data.update({'type': t})
             try:
                 file = dat['file']
@@ -40,28 +40,24 @@ async def handler(data: dict | list, t: int, clean: bool=False):
             except (KeyError, AssertionError) as e:pass
             else:
                 try:
-                    if not (await os.path.isfile(file)):
-                        file = glob.glob(f'./**/{file}', recursive=True)[0]
-                    async with aiofiles.open(file) as f:
-                        code = await f.read()
+                    if not (await os.path.isfile(file)):file = glob.glob(f'./**/{file}', recursive=True)[0]
+                    async with aiofiles.open(file) as f:code = await f.read()
                     fg = ''.join(random.sample(string.ascii_letters, k=52)) + '.py'
-                    async with aiofiles.open(fg, 'w') as f:
-                        await f.write(code)
+                    async with aiofiles.open(fg, 'w') as f:await f.write(code)
                     await os.remove(fg)
                     g = {i:v for i,v in globals().items()}
                     g['DATA'] = data
-                    if threaded:
-                        await asyncio.to_thread(exec, [code, g, {i:v for i,v in locals().items()}])
-                    else:
-                        exec(code, g, {i:v for i,v in locals().items()})
+                    if threaded:await asyncio.to_thread(exec, [code, g, {i:v for i,v in locals().items()}])
+                    else:exec(code, g, {i:v for i,v in locals().items()})
                     print(f'Flow {flow} executed {file} given type data {t} on {datetime.datetime.utcnow()} UTC.')
+                except Exception as e:print(f'Error when executing function for flow {flow}: {str(e)}')
+                try:
+                    if dat.get('address') is not None:
+                        async with session.post(dat['address'], data=json.dumps(data)) as _:pass
+                        print(f'Flow {flow} send {dat["address"]} type data {t} on {datetime.datetime.utcnow()} UTC.')
                 except Exception as e:
-                    print(f'Error when executing function for flow {flow}: {str(e)}')
-                    raise e
-            if dat.get('address') is not None:
-                async with session.post(dat['address'], data=json.dumps(data)) as _:pass
-                print(f'Flow {flow} send {dat["address"]} type data {t} on {datetime.datetime.utcnow()} UTC.')
-            print(f'Flow {flow} finished on {datetime.datetime.utcnow()} UTC.')
+                    print(f'Error in POSTing JSON data: {str(e)}')
+                print(f'Flow {flow} finished on {datetime.datetime.utcnow()} UTC.')
             
 def load_flows():
     global FLOWS
@@ -240,7 +236,7 @@ async def delete_posts(
     """Removes multiple posts by ids from the database, returns the database rows as a tuple before deletion."""
     ids = {i for i in (await get_posts()) if i[0] in ids}  # type: ignore
     await rm_file_ids({i[-5] for i in ids}, True)
-    p = map((lambda x: (x[0], (*x[1:4], *x[6:-2], len(x[-1])-len(x[-2])))), filter((lambda x: x[0] in ids), await get_posts()))
+    p = map((lambda x: (x[0], (*x[1:5], *x[6:-2], len(x[-1])-len(x[-2])))), filter((lambda x: x[0] in ids), await get_posts()))
     await handler(dict(p), 3)
     for post in ids:
         await cursor.execute("DELETE FROM posts WHERE id=?;", [post[0]])
@@ -363,7 +359,7 @@ async def purge_ip(ip: str) -> list[tuple[str, str, str, str, str, str, set[str]
     ).fetchall()
     await rm_files_ids({i[-5] for i in posts}, True)
     await cursor.execute("DELETE FROM posts WHERE ip=?", [ip])
-    p = map((lambda x: (x[0], (*x[1:4], *x[6:-2], len(x[-1])-len(x[-2])))), filter((lambda x: x[0] in {i[-5] for i in posts}), await get_posts()))
+    p = map((lambda x: (x[0], (*x[1:5], *x[6:-2], len(x[-1])-len(x[-2])))), filter((lambda x: x[0] in {i[-5] for i in posts}), await get_posts()))
     await handler(dict(p), 3)
     return posts # type: ignore
 

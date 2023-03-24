@@ -212,7 +212,7 @@ async def fmd(request: fastapi.Request, data: fastapi.UploadFile=fastapi.File())
 @limiter.limit('60/min')
 async def raw(request: fastapi.Request):
     posts = await get_posts()
-    return fastapi.responses.JSONResponse({i[0]: [*i[1:4], *i[6:-2], len(i[-2])-len(i[-1])] for i in posts})
+    return fastapi.responses.JSONResponse({i[0]: [*i[1:5], *i[6:-2], len(i[-2])-len(i[-1])] for i in posts})
 
 @app.get("/new")
 @limiter.limit("60/minute")

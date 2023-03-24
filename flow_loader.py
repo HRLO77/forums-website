@@ -7,7 +7,6 @@ for file in [*glob.glob('**/*.yaml', recursive=True),
     try:
         with open(file) as f:
             data = yaml.safe_load(f)
-            # print(data)
             name = [*data.keys()][0]
             if not (data[name]['event'].lower() in EVENTS):
                 raise ValueError(f'{data[name]["event"]} is not a valid event in {EVENTS}')
