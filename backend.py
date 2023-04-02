@@ -248,9 +248,9 @@ async def new(request: fastapi.Request):
     <h1 style='color:white;margin-left:100px;'>New post</h1>
     <form action="{WEBSITE}/form" method="post" enctype="multipart/form-data" id='post_form'>
         <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="title">Title:</label></div>    
-        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:10%;width:60%;display:flex;"><input type="text" id="title" name="title"><br><br></div>
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:30%;width:90%;display:flex;"><input type="text" id="title" name="title"><br><br></div>
         <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="content">Content:</label></div>
-        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:10%;width:60%;display:flex;"><input type="text" id="content" name="content"><br><br></div>
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:30%;width:90%;display:flex;"><input type="text" id="content" name="content"><br><br></div>
         <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="file">File:</label></div>
         <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px"><input type="file" id="file" name="file" onchange="uploadFile()"><br><br><progress id='progress' value='0' max='100' style="width: 15.625%;"></progress><p id='status' style="font-size: small'">0% Uploaded</p></div>
         <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px"><input type="submit" value="Submit"></div>
@@ -467,7 +467,7 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
         ps, pins = reversed(ps), reversed(pins)
     elif sortby == 'file_oldest':
        ps, pins = reversed(sorted(ps, key=lambda post: (datepost(post), post[4]!=None),)), sorted(sorted(pins, key=(lambda post: (datepost(post), post[4]!=None)),))
-    ps = ps[t*pgn:t*pgn+t]
+    ps = ([*ps])[t*pgn:t*pgn+t]
     del t
 
     for p in pins:page+=await make_post(*p)
