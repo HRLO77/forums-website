@@ -1,0 +1,11 @@
+fastapi
+slowapi
+aiosqlite
+aiofiles
+uvicorn
+python-multipart
+aiohttp
+pyyaml
+aioconsole
+aiohttp[speedups]
+aiodns
