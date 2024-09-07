@@ -14,7 +14,6 @@ import gzip
 from aiofiles import os
 import tracemalloc
 import subprocess
-<<<<<<< HEAD
 import sys
 from typing import Optional
 
@@ -24,15 +23,6 @@ WEBSITE = "http://localhost:8000"
 
 
 async def split(iter, size: int=500):
-=======
-
-
-SORT_PIN = '&#128392; Pinned'
-WEBSITE = "http://127.0.0.1:8000"
-
-
-async def split(iter, size: int=470):
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
     largest = {
         "@",
         "#",
@@ -87,21 +77,13 @@ async def make_post(
         border-style:solid;
         color:white;
         border-color:rgba(95, 158, 160, 0.46);">
-<<<<<<< HEAD
             <script src='{WEBSITE}/resource/script.js'></script>
-=======
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
             <div>
                 <img src="{WEBSITE}/resource/user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
                 <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title}</p>
                 <p style="margin-left: 1.4%;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" <a style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
-<<<<<<< HEAD
                 <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');sleep(1000);points('{str(id).strip()}', '{rand}');">↑</button>
                 <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');sleep(1000);points('{str(id).strip()}', '{rand}');">↓</button>
-=======
-                <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↑</button>
-                <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↓</button>
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
                 <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
             </div>
             <div style="margin-left:1.75%;font-size:smaller;">
@@ -116,10 +98,7 @@ async def make_post(
         <p style="text-rendering: optimizeSpeed;color:white;font-family:'Courier New', Courier, monospace;font-size:large;margin-left:3.3%;margin-top:1.5%">	
             {pin}</p>
         <div>
-<<<<<<< HEAD
             
-=======
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
             <div style="background-color:black;
             text-rendering: optimizeSpeed;
             margin-top:1.5%;
@@ -129,21 +108,13 @@ async def make_post(
             border-style:solid;
             color:white;
             border-color:rgba(95, 158, 160, 0.46);">
-<<<<<<< HEAD
                 <script src='{WEBSITE}/resource/script.js'></script>
-=======
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
                 <div>
                     <img src="{WEBSITE}/resource/user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
                     <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title}</p>
                     <p style="margin-left: 1.4%;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" <a style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
-<<<<<<< HEAD
                     <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');sleep(1000);points('{str(id).strip()}', '{rand}');">↑</button>
                     <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');sleep(1000);points('{str(id).strip()}', '{rand}');">↓</button>
-=======
-                    <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↑</button>
-                    <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');points('{str(id).strip()}', '{rand}');">↓</button>
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
                     <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
                 </div>
                 <div style="margin-left:1.75%;font-size:smaller;">
@@ -168,11 +139,7 @@ async def start(*args, **kwargs):
     await start_conn()
     session = aiohttp.ClientSession()
     try:await asyncio.to_thread(subprocess.run, ['python', 'flow_loader.py'])
-<<<<<<< HEAD
     except Exception as e:print(f'Error loading flows in backend: {e}')
-=======
-    except Exception:pass
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
     await asyncio.to_thread(load_flows)
 
 
@@ -185,11 +152,7 @@ async def evaluate_ip(request: fastapi.Request, call_next):
 
 
 @app.post("/upvote")
-<<<<<<< HEAD
 @limiter.limit("5/minute")
-=======
-@limiter.limit("10/minute")
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
 async def upvote(request: fastapi.Request, id: bytes = fastapi.Body()):
     try:
         id: str = json.loads(id.decode())["id"]
@@ -218,11 +181,7 @@ async def upvote(request: fastapi.Request, id: bytes = fastapi.Body()):
 
 
 @app.post("/downvote")
-<<<<<<< HEAD
 @limiter.limit("5/minute")
-=======
-@limiter.limit("10/minute")
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
 async def downvote(request: fastapi.Request, id: bytes = fastapi.Body()):
     try:
         id: str = json.loads(id.decode())["id"]
@@ -249,29 +208,15 @@ async def downvote(request: fastapi.Request, id: bytes = fastapi.Body()):
     except Exception as e:
         return fastapi.responses.JSONResponse({"detail": f"{e}"}, 500)
 
-<<<<<<< HEAD
 
 @app.get('/raw')
 @limiter.limit('20/minute')
-=======
-@app.post('/fmd')
-@limiter.limit('10/min')
-async def fmd(request: fastapi.Request, data: fastapi.UploadFile=fastapi.File()):
-    pass
-
-@app.get('/raw')
-@limiter.limit('60/min')
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
 async def raw(request: fastapi.Request):
     posts = await get_posts()
     return fastapi.responses.JSONResponse({i[0]: [*i[1:5], *i[6:-2], len(i[-2])-len(i[-1])] for i in posts})
 
 @app.get("/new")
-<<<<<<< HEAD
 @limiter.limit("20/minute")
-=======
-@limiter.limit("60/minute")
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
 async def new(request: fastapi.Request):
     return fastapi.responses.HTMLResponse(
         f"""
@@ -282,7 +227,6 @@ async def new(request: fastapi.Request):
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src='{WEBSITE}/resource/script.js'></script>
-<<<<<<< HEAD
     <title>tips.massey.org</title>
     <style>
     #progressWrapper {{
@@ -301,10 +245,6 @@ async def new(request: fastapi.Request):
         border-radius: 5px; /* Optional: Rounds the edges */
     }}
     </style>
-=======
-    <title>tips.saltfleet.org</title>
-
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
 </head>
 <body style="background:#030303;">
     
@@ -322,7 +262,6 @@ async def new(request: fastapi.Request):
             <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;margin-bottom:1%">New post</button></a>
         </div>
     </nav>
-<<<<<<< HEAD
     <h1 style='color:white;margin-left:7.35%;'>New post</h1>
     <form id="post_form">
         <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="title">Title:</label></div>    
@@ -343,29 +282,11 @@ async def new(request: fastapi.Request):
 </body>
 </html>
 """
-=======
-    <h1 style='color:white;margin-left:100px;'>New post</h1>
-    <form action="{WEBSITE}/form" method="post" enctype="multipart/form-data" id='post_form'>
-        <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="title">Title:</label></div>    
-        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:30%;width:90%;display:flex;"><input type="text" id="title" name="title"><br><br></div>
-        <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="content">Content:</label></div>
-        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:30%;width:90%;display:flex;"><input type="text" id="content" name="content"><br><br></div>
-        <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="file">File:</label></div>
-        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px"><input type="file" id="file" name="file" onchange="uploadFile()"><br><br><progress id='progress' value='0' max='100' style="width: 15.625%;"></progress><p id='status' style="font-size: small'">0% Uploaded</p></div>
-        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px"><input type="submit" value="Submit"></div>
-      </form>
-</body>
-</html>"""
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
 )
 
 
 @app.get("/points")
-<<<<<<< HEAD
 @limiter.limit("20/minute")
-=======
-@limiter.limit("60/minute")
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
 async def points(request: fastapi.Request, post_id: str):
     try:
         p = await get_post(post_id)
@@ -376,26 +297,17 @@ async def points(request: fastapi.Request, post_id: str):
 
 
 @app.post("/form")
-<<<<<<< HEAD
 @limiter.limit("1/minute")
-=======
-@limiter.limit("10/minute")
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
 async def form(
     request: fastapi.Request,
     title: str = fastapi.Form(),
     content: str = fastapi.Form(),
-<<<<<<< HEAD
     file: Optional[fastapi.UploadFile] = fastapi.File(None),
-=======
-    file: fastapi.UploadFile = fastapi.File(),
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
 ):
     global session
     if (await is_inject(title)) or (await is_inject(content)):
         return fastapi.responses.JSONResponse({"detail":"SQL INJECT DETECTED"}, 403)
     id: str = ""
-<<<<<<< HEAD
     if not(file is None):
         contents = await file.read()
         async def is_too_big(b: bytes, name):
@@ -408,33 +320,13 @@ async def form(
                     size = (await os.stat(name)).st_size  # / (1024 * 1024)
                 except Exception as e:
                     fastapi.responses.JSONResponse({f"detail": f"ERROR IN UPLOADING FILE: {e}"}, 500)
-=======
-    if file.filename != "":
-        contents = await file.read()
-        async def is_too_big(b: bytes, name):
-            '''Checks if a file is more than 2 GiB in size after gzip compression, and is a valid file.'''
-            size = 1024*2+1
-            try:
-                async with aiofiles.open(name, 'x'):pass
-                try:
-
-                    async with aiofiles.open(name, 'wb') as f:await f.write(b)
-                    size = (await os.stat(name)).st_size / (1024 * 1024)
-                except Exception:
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
                     try:await os.remove(name)
                     except Exception:pass
                     return True, size
                 try:
-<<<<<<< HEAD
                     if size > 3146000:await os.remove(name)
                 except Exception:pass 
                 return size > 3146000, size
-=======
-                    if size > 1024*2:await os.remove(name)
-                except Exception:pass
-                return size > 1024*2, size
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
             except Exception:
                 await os.remove(name)
                 
@@ -443,7 +335,6 @@ async def form(
         except Exception:pass
         res = await is_too_big(contents, file.filename)
         if (res[0]):
-<<<<<<< HEAD
             return fastapi.responses.JSONResponse({"detail": f"FILE MUST BE UNDER 3 MiB AFTER COMPRESSION, FILE WAS {res[1]//1049000}.{res[1]%1049000} MiB"}, 413)
         else:
             id = "".join(random.sample(string.ascii_letters, k=52))
@@ -452,16 +343,6 @@ async def form(
             #         id = "".join(random.sample(string.ascii_letters, k=52))
             #     else:
             #         break
-=======
-            return fastapi.responses.JSONResponse({"detail": f"FILE MUST BE UNDER 2 GIGABYTES AFTER COMPRESSION, FILE WAS {res[1]//1024}.{res[1]%1024} GiB"}, 413)
-        else:
-            id = "".join(random.sample(string.ascii_letters, k=52))
-            while True:
-                if await os.path.isfile(f"{id}_{file.filename}"):
-                    id = "".join(random.sample(string.ascii_letters, k=52))
-                else:
-                    break
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
             if len(await split(f"{id}_{file.filename}")) > 1:return fastapi.responses.JSONResponse({"detail": "FILENAME TOO LARGE"}, 413)
             await os.rename(file.filename, f"{id}_{file.filename}")
     if len(await split(title, 300)) > 1:
@@ -472,11 +353,8 @@ async def form(
         .replace(">", "&gt;")
         .replace("'", "&#39;")
         .replace('"', "&quot;")
-<<<<<<< HEAD
         .replace('&', '&amp;')
         .replace('-', '&ndash;')
-=======
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
         if i.isprintable()
     )
     content = "".join(
@@ -485,17 +363,11 @@ async def form(
         .replace(">", "&gt;")
         .replace("'", "&#39;")
         .replace('"', "&quot;")
-<<<<<<< HEAD
         .replace('&', '&amp;')
         .replace('-', '&ndash;')
         if i.isprintable()
     )
     if file is None:
-=======
-        if i.isprintable()
-    )
-    if file.filename == "":
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
         returned = await new_post(
             title, content, datetime.datetime.utcnow(), str(request.client.host)
         )
@@ -512,11 +384,7 @@ async def form(
 
 
 @app.get("/")
-<<<<<<< HEAD
 @limiter.limit("20/minute")
-=======
-@limiter.limit("60/minute")
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
 async def root(request: fastapi.Request):
     return fastapi.responses.HTMLResponse(
         f"""<!DOCTYPE html>
@@ -526,11 +394,7 @@ async def root(request: fastapi.Request):
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{WEBSITE}/resource/dropdown.css">
-<<<<<<< HEAD
     <title>tips.massey.org</title>
-=======
-    <title>tips.saltfleet.org</title>
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
 </head>
 <body style="background:#030303;">
     <nav style="
@@ -558,18 +422,11 @@ async def shutdown(*args, **kwargs):
     global session
     await close()
     await session.close()
-<<<<<<< HEAD
     exit()
 
 
 @app.get("/posts")
 @limiter.limit("20/minute")
-=======
-
-
-@app.get("/posts")
-@limiter.limit("60/minute")
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
 async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     valids = {'latest', 'score', 'length', 'file', 'oldest', 'file_oldest'}
     if not sortby.lower() in valids:return fastapi.responses.JSONResponse({'detail': 'INVALID SORT TYPE', 'sorts': f'{valids}'}, 404)
@@ -580,11 +437,7 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{WEBSITE}/resource/dropdown.css">
-<<<<<<< HEAD
     <title>tips.massey.org</title>
-=======
-    <title>tips.saltfleet.org</title>
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
     
 </head>
 <body style="background:#030303;">
@@ -617,11 +470,7 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     </div>
 """ 
     # really fast, efficient splicing of posts for each page!
-<<<<<<< HEAD
     LEN = 11
-=======
-    LEN = 25
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
     ps = [*await get_posts()]
     if LEN*pgn > len(ps):
         return fastapi.responses.JSONResponse({'detail': f'UNKOWN PAGE NUMBER {pgn}'}, 404)
@@ -645,17 +494,10 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     elif sortby == 'file':
         ps, pins = sorted(ps, key=lambda post: (post[4]!=None, datepost(post)), reverse=True), sorted(pins, key=(lambda post: (post[4]!=None, datepost(post))), reverse=True)
     elif sortby == 'oldest':
-<<<<<<< HEAD
         ps, pins = [*reversed(ps)], [*reversed(pins)]
     elif sortby == 'file_oldest':
        ps, pins = [*reversed(sorted(ps, key=lambda post: (datepost(post), post[4]!=None),))], [*sorted(sorted(pins, key=(lambda post: (datepost(post), post[4]!=None)),))]
     ps = ps[t*pgn:t*pgn+t]
-=======
-        ps, pins = reversed(ps), reversed(pins)
-    elif sortby == 'file_oldest':
-       ps, pins = reversed(sorted(ps, key=lambda post: (datepost(post), post[4]!=None),)), sorted(sorted(pins, key=(lambda post: (datepost(post), post[4]!=None)),))
-    ps = ([*ps])[t*pgn:t*pgn+t]
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
     del t
 
     for p in pins:page+=await make_post(*p)
@@ -686,11 +528,7 @@ async def fetch_resource(resource: str):
 
 
 @app.get("/post/{post}")
-<<<<<<< HEAD
 @limiter.limit("20/minute")
-=======
-@limiter.limit("60/minute")
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
 async def post(request: fastapi.Request, post: str):
     page = f"""<!DOCTYPE html>
 <html lang="en">
@@ -699,11 +537,7 @@ async def post(request: fastapi.Request, post: str):
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-<<<<<<< HEAD
     <title>tips.massey.org</title>
-=======
-    <title>tips.saltfleet.org</title>
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
     
 </head>
 <body style="background:#030303;">
@@ -744,7 +578,6 @@ async def post(request: fastapi.Request, post: str):
 </body>
 </html>"""
     return fastapi.responses.HTMLResponse(page)
-<<<<<<< HEAD
 
 
 @app.get('/mod')
@@ -810,5 +643,3 @@ async def moderate(request: fastapi.Request, password: str = fastapi.Form(), cod
         code = fastapi.responses.HTMLResponse(await f.read())
     await os.remove(name)
     return code
-=======
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc

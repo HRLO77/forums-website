@@ -12,11 +12,6 @@ import re
 import pickle
 import aiohttp
 import json
-<<<<<<< HEAD
-=======
-import uuid
-import importlib
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
 import sys
 sys.path.append(__import__('os').getcwd())
 DATABASE = "database.sqlite3"
@@ -65,16 +60,10 @@ async def handler(data: dict | list, t: int, clean: bool=False):
 def load_flows():
     global FLOWS
     try:
-<<<<<<< HEAD
         #__import__('os').remove('flows.pickle') # sept 2024, why is this here?
         with open('flows.pickle', 'rb') as f:
             FLOWS = pickle.load(f)
         
-=======
-        with open('flows.pickle', 'rb') as f:
-            FLOWS = pickle.load(f)
-        __import__('os').remove('flows.pickle')
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
     except Exception as e:
         print(f'Error loading flows in db_funcs: {str(e)}')
 
@@ -94,11 +83,7 @@ async def start_conn():
     cursor = await aiosqlite.connect(DATABASE)
     # locale = {'.\\database.sqlite3', '.\\rep_reg.py', '.\\script.js', '.\\db_funcs.py', '.\\requirements.txt', '.\\backend.py', '.\\LICENSE', '.\\__main__.py', '.\\backup.sqlite3', '.\\maintenence', '.\\clear.py', '.\\tests', '.\\__pycache__', '.\\Privacy Policy', '.\\README.md', '.\\user.jpeg', '.\\inject.sqlite3'}
     posts = await get_posts()
-<<<<<<< HEAD
     session = aiohttp.ClientSession(loop=asyncio.get_event_loop())
-=======
-    session = aiohttp.ClientSession()
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
     files = {i[-5] for i in posts}
     for i in glob.glob('*'):
         match = re.match('^([a-zA-Z]{52})', i)

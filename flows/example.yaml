@@ -1,7 +1,0 @@
-# valid events are {'*', 'vote', 'post', 'delete'}
-# this is an example flow structure
-name_here:
-  event: "post" # the event (see README)
-  file: "bot.py" # optional
-  address: "http://127.0.0.1:8001" # the endpoint to send the data to
-  threaded: false

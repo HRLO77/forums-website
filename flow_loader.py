@@ -1,15 +1,9 @@
 import asyncio, aiohttp, yaml, threading, subprocess, glob, aiofiles, pickle, json
-<<<<<<< HEAD
 import os
 g = {}
 EVENTS = {'*', 'vote', 'post', 'delete'}
 if not(os.path.isfile('flows.pickle')):
     open('flows.pickle', 'wb').close()
-=======
-from aiofiles import os
-g = {}
-EVENTS = {'*', 'vote', 'post', 'delete'}
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
 for file in [*glob.glob('**/*.yaml', recursive=True),
              *glob.glob('**/*.yml', recursive=True)]:
     try:

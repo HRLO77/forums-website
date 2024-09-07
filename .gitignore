@@ -127,8 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-<<<<<<< HEAD
 
 .space
-=======
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc

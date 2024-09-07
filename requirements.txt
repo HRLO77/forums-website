@@ -8,9 +8,4 @@ aiohttp
 pyyaml
 aioconsole
 aiohttp[speedups]
-<<<<<<< HEAD
 aiodns
-=======
-aiodns
-cchardet
->>>>>>> cd751be441c9cc833a6b65d5d5dd39bc512ed0bc
