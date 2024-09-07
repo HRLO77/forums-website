@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New post</title>
+</head>
+<body style="background-color: #030303;">
+    <script src="../script.js"></script>
+    <form action="http://127.0.0.1:8000/post" method="post" enctype="multipart/form-data">
+        <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="title">Title:</label></div>    
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:20%;width:20%;display:flexbox;min-width: 10%"><input type="text" onchange="update('title');" id="title" name="title"><br><br></div>
+        <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="content">Content:</label></div>
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:20%;width:20%;display:flexbox;min-width: 10%"><input type="text" onchange="update('content');" id="content" name="content"><br><br></div>
+        <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="file">File:</label></div>
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px"><input type="file" id="file" name="file" onchange="uploadFile()"><br><br><progress id='progress' value='0' max='100' style="width: 15.625%;"></progress><p id='status' style="font-size: small'">test</p></div>
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px"><input type="submit" value="Submit"></div>
+      </form>
+</body>
+</html>

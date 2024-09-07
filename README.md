@@ -2,13 +2,7 @@
 A forums website, backend written in python, minimal data collection, with efficient and easy to implement features.
 
 To change website address, change the `WEBSITE` constant in `script.js` and `backend.py`.
-## Managing posts
-To manage posts in the database (pinning posts, removing authors, banning IP's).
 
-Write code desired in interact.py and run `python interact.py --user`.
-
-An example is in interact.py to pin a post with an ID. Pinned posts will be sorted by the
-`SORT_PIN` variable in `backend.py`, which is currently equal to `'&#128392; Pinned'`.
 # requirements
 Install requirements with `python -m pip install -r requirements.txt`.
 
@@ -56,7 +50,6 @@ password - The password to authenticate moderation
 code - the code to execute.
 
 ## GET endpoints
-All GET endpoints are ratelimited to 60/minute.
 
 * /raw/
 
