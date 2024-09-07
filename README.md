@@ -10,8 +10,11 @@ Install requirements with `python -m pip install -r requirements.txt`.
 ## POST endpoints
 
 * /upvote/
+
 Upvotes a post.
+
 Query params:
+
 post_id - The ID of the post to upvote.
 
 * /downvote/
@@ -22,13 +25,6 @@ Query params:
 
 post_id - The ID of the post to downvote.
 
-* /fmd/
-
-Recieves only multipart/formdata for files (progress loading in JS) for progress bars.
-
-Body params:
-
-data - bytes.
 
 * /form/
 Creates a new post with multipart/form-data data.
