@@ -5,6 +5,6 @@ COPY ./* website/
 WORKDIR /website/
 EXPOSE 8000
 RUN python -m pip install -r requirements.txt
-CMD ["python", "__main__.py", "True"]
+CMD ["python", "__main__.py", "--user", "qwertyazerty"]
 # to run a container on this image, run "docker run --privileged <IMAGE_ID>" you can get the IMAGE_ID by running "docker images" (NOTE: you may have to start the container with the --network="host")
 # to stop a running container, run "docker ps" to get a list of containers, and run "docker rm <CONTAINER_ID>"

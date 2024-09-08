@@ -259,20 +259,20 @@ async def new(request: fastapi.Request):
 </head>
 <body style="background:#030303;">
     
-    <nav style="
-    display:flex;
-    justify-content: center;
-    align-items:center;
-    height: 40pt;
-    background-color:rgba(95, 158, 160, 0.46);;
-    font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
-    ">
-        <div>
-            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-17.5%">Policy</button></a>
-            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;display:inline-flexbox">All posts</button></a>
-            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;margin-bottom:1%">New post</button></a>
-        </div>
-    </nav>
+        <nav style="
+        display:flexbox;
+        justify-content: center;
+        align-items:center;
+        height: 100pt;
+        background-color:rgba(95, 158, 160, 0.46);
+        font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
+        ">
+            <div>
+                <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
+                <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
+                <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
+            </div>
+        </nav>
     <h1 style='color:white;margin-left:7.35%;'>New post</h1>
     <form id="post_form">
         <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="title">Title:</label></div>    
@@ -409,21 +409,21 @@ async def root(request: fastapi.Request):
     <title>tips.massey.org</title>
 </head>
 <body style="background:#030303;">
-    <nav style="
-    display:flex;
-    justify-content: center;
-    align-items:center;
-    height: 40pt;
-    background-color:rgba(95, 158, 160, 0.46);
-    font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
-    ">
-        <div>
-            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-17.5%">Policy</button></a>
-            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;display:inline-flexbox">All posts</button></a>
-            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;margin-bottom:1%">New post</button></a>
-        </div>
-    </nav>
-    <h1 style='margin-left:45%;color:white;'>Root</h1>
+        <nav style="
+        display:flexbox;
+        justify-content: center;
+        align-items:center;
+        height: 100pt;
+        background-color:rgba(95, 158, 160, 0.46);
+        font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
+        ">
+            <div>
+                <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
+                <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
+                <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
+            </div>
+        </nav>
+    <h1 style='margin-left:47.2%;color:white;'>Root</h1>
 </body>
 </html>"""
     )
@@ -453,17 +453,17 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     <script src='{WEBSITE}/resource/script.js'></script>
     <div style="background: #030303">
         <nav style="
-        display:flex;
+        display:flexbox;
         justify-content: center;
         align-items:center;
-        height: 40pt;
+        height: 100pt;
         background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
         ">
             <div>
-            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-17.5%">Policy</button></a>
-            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;display:inline-flexbox">All posts</button></a>
-            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;margin-bottom:1%">New post</button></a>
+                <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
+                <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
+                <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
             </div>
         </nav>
     <div class="dropdown">
@@ -554,17 +554,17 @@ async def post(request: fastapi.Request, post: str):
     <script src='{WEBSITE}/resource/script.js'></script>
     <div style="background: #030303">
         <nav style="
-        display:flex;
+        display:flexbox;
         justify-content: center;
         align-items:center;
-        height:40pt;
+        height: 100pt;
         background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
         ">
             <div>
-            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-17.5%">Policy</button></a>
-            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;display:inline-flexbox">All posts</button></a>
-            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;margin-bottom:1%">New post</button></a>
+                <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
+                <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
+                <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
             </div>
         </nav>
     <div class="dropdown">
@@ -604,20 +604,20 @@ async def moderate(request: fastapi.Request,):
 </head>
 <body style="background:#030303;">
     
-    <nav style="
-    display:flex;
-    justify-content: center;
-    align-items:center;
-    height: 40pt;
-    background-color:rgba(95, 158, 160, 0.46);;
-    font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
-    ">
-        <div>
-            <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-17.5%">Policy</button></a>
-            <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;display:inline-flexbox">All posts</button></a>
-            <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;margin-bottom:1%">New post</button></a>
-        </div>
-    </nav>
+        <nav style="
+        display:flexbox;
+        justify-content: center;
+        align-items:center;
+        height: 100pt;
+        background-color:rgba(95, 158, 160, 0.46);
+        font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
+        ">
+            <div>
+                <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
+                <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
+                <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
+            </div>
+        </nav>
     <h1 style='color:white;margin-left:5%;'>Moderation page</h1>
     <form id="mod_form">
         <div style="margin-left: 9.45%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="password">Password:</label></div>    
