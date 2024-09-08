@@ -134,3 +134,7 @@ dmypy.json
 
 *.pickle
 
+database.sqlite3
+inject.sqlite3
+backup.sqlite3
+flows.pickle
