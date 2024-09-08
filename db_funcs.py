@@ -21,6 +21,8 @@ FLOWS = {}
 cursor: aiosqlite.Connection = aiosqlite.connect(DATABASE)
 session: aiohttp.ClientSession | None = None
 
+LENGTH_OF_ID = 5
+
 async def handler(data: dict | list, t: int, clean: bool=False):
     '''Handles flow data you dont want to: {'*': 0, 'vote': 1, 'post': 2, 'delete': 3}'''
     global session
@@ -40,19 +42,19 @@ async def handler(data: dict | list, t: int, clean: bool=False):
                 try:
                     if not (await os.path.isfile(file)):file = glob.glob(f'./**/{file}', recursive=True)[0]
                     async with aiofiles.open(file) as f:code = await f.read()
-                    fg = ''.join(random.sample(string.ascii_letters, k=52)) + '.py'
+                    fg = ''.join(random.sample(string.ascii_letters+string.digits, k=LENGTH_OF_ID)) + '.py'
                     async with aiofiles.open(fg, 'w') as f:await f.write(code)
                     await os.remove(fg)
                     g = {i:v for i,v in globals().items()}
                     g['DATA'] = data
                     if threaded:await asyncio.to_thread(exec, [code, g, {i:v for i,v in locals().items()}])
                     else:exec(code, g, {i:v for i,v in locals().items()})
-                    print(f'Flow {flow} executed {file} given type data {t} on {datetime.datetime.utcnow()} UTC.')
+                    print(f'Flow {flow} executed {file} given type data {t} on {datetime.datetime.now(datetime.UTC)} UTC.')
                 except Exception as e:print(f'Error when executing function for flow {flow}: {str(e)}')
                 try:
                     if dat.get('address') is not None:
                         async with session.post(dat['address'], data=json.dumps(data)) as _:pass
-                        print(f'Flow {flow} send {dat["address"]} type data {t} on {datetime.datetime.utcnow()} UTC.')
+                        print(f'Flow {flow} send {dat["address"]} type data {t} on {datetime.datetime.now(datetime.UTC)} UTC.')
                 except Exception as e:
                     print(f'Error in POSTing JSON data: {str(e)}')
                 print(f'Flow {flow} finished on {datetime.datetime.utcnow()} UTC.')
@@ -157,14 +159,14 @@ async def new_post(
 ) -> tuple[str, str, str, str, str, str, str, set[str], set[str]]:
     """Creates a new post with provided data, returns the row in the database as a tuple."""
     date = date.strftime("%Y-%m-%d") if isinstance(date, datetime.datetime) else date
-    id = "".join(random.sample(string.ascii_letters, k=52))
-    while True:
-        try:
-            await get_post(id)
-        except Exception as e:
-            if isinstance(e, TypeError):
-                break
-            id = "".join(random.sample(string.ascii_letters, k=52))
+    id = "".join(random.sample(string.ascii_letters+string.digits, k=LENGTH_OF_ID))
+    # while True:
+    #     try:
+    #         await get_post(id)
+    #     except Exception as e:
+    #         if isinstance(e, TypeError):
+    #             break
+    #         id = "".join(random.sample(string.ascii_letters+string.digits, k=6))
     await cursor.execute(
         "INSERT INTO posts VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);",
         [id, title, content, date, fp, ip, pin, "{}", "{}"],
@@ -289,10 +291,14 @@ async def is_inject(query: str) -> bool:
         con = await aiosqlite.connect(INJECT)
         await con.execute(query)
     except Exception as e:
+        await con.close()
         await update_inject()
+        
         return False
     else:
+        await con.close()
         await update_inject()
+        
         return True
 
 
@@ -407,12 +413,31 @@ async def close():
     posts = await get_posts()
     files = {i[-5] for i in posts}
     for i in glob.glob('*'):
-        match = re.match('^([a-zA-Z]{52})', i)
+        match = re.match(f'^([a-zA-Z0-9]{{{LENGTH_OF_ID}}})_', i)
         if (await os.path.isfile(i)) and match!=None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
             if not i in files:
                 # print('requirements met', i)
                 await os.remove(i)
     await cursor.commit()
+    await cursor.close()
+
+async def create():
+    'Creates inject, backup and database files.'
+        
+    for i in ['database.sqlite3', 'backup.sqlite3', 'inject.sqlite3']:
+        if (await os.path.isfile(i)):await os.remove(i)
+        async with aiofiles.open(i, 'x'):pass
+        
+    cursor = await aiosqlite.connect(DATABASE)
+    await (
+            await (
+                await (await cursor.execute("DROP TABLE IF EXISTS posts;")).execute(
+                    "DROP TABLE IF EXISTS ips;"
+                )
+            ).execute(
+                "CREATE TABLE posts(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, fp TEXT NULL, ip TEXT NOT NULL, pin TEXT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
+            )
+        ).execute("CREATE TABLE ips(ip TEXT PRIMARY KEY NOT NULL, blacklisted INT);")
     await cursor.close()
 
 if __name__ == "__main__":
@@ -482,12 +507,12 @@ if __name__ == "__main__":
             print(*await get_posts(), *await get_ips())
             print(await is_inject("SELECT * FROM posts"))
             print(await is_inject("hello!"))
-            await start_conn()
-            await close()
+            #await start_conn()
+            
             open('RTSpMXFavdrLEuACcNZjhgmoqxHKbkGtDIeywQnYJWVBszPOUfli_requirements.txt', 'x')
             open('RTSpMXFavdrLEuACcNZjhgmoqxHKbkGtDIeywQnYJWVBszPOUfli_requirements.txt', 'wb').write(pickled[1])
             open('cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg', 'x')
             open('cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg', 'wb').write(pickled[0])
-            
+        await close()
             
     asyncio.run(main())

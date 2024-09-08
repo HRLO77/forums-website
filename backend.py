@@ -8,7 +8,6 @@ from slowapi import util
 import string
 import json
 import random
-import aiofiles
 import aiohttp
 import gzip
 from aiofiles import os
@@ -18,11 +17,22 @@ import sys
 from typing import Optional
 
 SORT_PIN = '&#128392; Pinned'
-WEBSITE = "http://localhost:8000"
+WEBSITE = "http://localhost:3500"
 # WEBSITE = os.environ['DETA_SPACE_APP_HOSTNAME']
 
+SWEARS = {'slt', 'sht', 'fck', 'pss', 'dmn', 'slvt', 'pssy', 'fg', 'fag', 'rtrd', 'tism', 'tsm', 'cnt', 'cvnt', 'bstrd', 'btch', 'wtch', 'bth', 'wth', 'fckr', 'nig', 'nigga', 'gga', 'ngg', 'sx', 'prn', 'porn', 'jw', 'jew', 'vag', 'vgin', 'vagi', 'nl', 'cck', 'dck', 'pns', 'rdn', 'tt', 'bb', 'gn', 'n33r','n3gr', 'ngr'} # credit for kaggle
+x = {'a': '', 'e': '', 'i': '', 'o': '', 'u': '', 'y': ''}
+x.update({i: '' for i in string.punctuation+string.digits})
+table = str.maketrans(x)
 
-async def split(iter, size: int=500):
+async def basic_check(s: str):
+    s = s.lower().translate(table)
+    for i in s.split():
+        if i in SWEARS:
+            return True
+    return False
+
+async def split(iter, size: int=470):
     largest = {
         "@",
         "#",
@@ -63,13 +73,12 @@ async def make_post(
     downvotes: set[str]=set(),
     shortened: bool = True,
 ):
-    rand = "".join(random.sample(string.ascii_letters, k=52))
+    rand = "".join(random.sample(string.ascii_letters+string.digits, k=LENGTH_OF_ID))
     c: list[str] = await split(content) # type: ignore
     if pin is None:
         return f"""
     <div>
         <div style="background-color:black;
-        text-rendering: optimizeSpeed;
         margin-top:1.5%;
         margin-left:3.3%;
         border-radius: 15px;
@@ -81,13 +90,13 @@ async def make_post(
             <div>
                 <img src="{WEBSITE}/resource/user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
                 <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title}</p>
-                <p style="margin-left: 1.4%;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" <a style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
+                <p style="margin-left: 1.4%;font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" <a style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
                 <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');sleep(1000);points('{str(id).strip()}', '{rand}');">↑</button>
                 <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');sleep(1000);points('{str(id).strip()}', '{rand}');">↓</button>
-                <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
+                <p style="font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
             </div>
-            <div style="margin-left:1.75%;font-size:smaller;">
-                <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')()}</p>
+            <div style="margin-left:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed">
+                <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + (lambda: f'<br><br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}</p>
             </div>
         </div>
     </div>
@@ -95,12 +104,11 @@ async def make_post(
     else:
         return f"""
     <div>
-        <p style="text-rendering: optimizeSpeed;color:white;font-family:'Courier New', Courier, monospace;font-size:large;margin-left:3.3%;margin-top:1.5%">	
+        <p style="color:white;font-family:'Courier New', Courier, monospace;font-size:large;margin-left:3.3%;margin-top:1.5%">	
             {pin}</p>
         <div>
             
             <div style="background-color:black;
-            text-rendering: optimizeSpeed;
             margin-top:1.5%;
             margin-left:3.3%;
             border-radius: 15px;
@@ -112,13 +120,13 @@ async def make_post(
                 <div>
                     <img src="{WEBSITE}/resource/user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
                     <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title}</p>
-                    <p style="margin-left: 1.4%;font-family:sans-serif;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" <a style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
+                    <p style="margin-left: 1.4%;font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" <a style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
                     <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');sleep(1000);points('{str(id).strip()}', '{rand}');">↑</button>
                     <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');sleep(1000);points('{str(id).strip()}', '{rand}');">↓</button>
-                    <p style="font-family:sans-serif;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
+                    <p style="font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
                 </div>
-                <div style="margin-left:1.75%;font-size:smaller;">
-                    <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + (lambda: f'<br><br><p style="font-family:sans-serif">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[53:]}</a></p>' if file is not None else '')()}</p>
+                <div style="margin-left:1.75%;font-size:medium;text-rendering:optimizeSpeed">
+                    <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + (lambda: f'<br><br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}</p>
                 </div>
             </div>
         </div>
@@ -132,12 +140,12 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
+
+
 @app.on_event("startup")
 async def start(*args, **kwargs):
-    global session
     tracemalloc.start()
     await start_conn()
-    session = aiohttp.ClientSession()
     try:await asyncio.to_thread(subprocess.run, ['python', 'flow_loader.py'])
     except Exception as e:print(f'Error loading flows in backend: {e}')
     await asyncio.to_thread(load_flows)
@@ -179,6 +187,9 @@ async def upvote(request: fastapi.Request, id: bytes = fastapi.Body()):
     except Exception as e:
         return fastapi.responses.JSONResponse({"detail": f"{e}"}, 500)
 
+# @app.get('/redirect')
+# @limiter.limit('10/minute')
+# async def 
 
 @app.post("/downvote")
 @limiter.limit("5/minute")
@@ -254,7 +265,7 @@ async def new(request: fastapi.Request):
     align-items:center;
     height: 40pt;
     background-color:rgba(95, 158, 160, 0.46);;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
     ">
         <div>
             <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-17.5%">Policy</button></a>
@@ -304,15 +315,18 @@ async def form(
     content: str = fastapi.Form(),
     file: Optional[fastapi.UploadFile] = fastapi.File(None),
 ):
-    global session
     if (await is_inject(title)) or (await is_inject(content)):
         return fastapi.responses.JSONResponse({"detail":"SQL INJECT DETECTED"}, 403)
     id: str = ""
+    if (await basic_check(content)):
+        return fastapi.responses.JSONResponse({"detail":"INAPPROPRIATE MATERIAL DETECTED"}, 422)
+    elif ((await basic_check(title))):
+        return fastapi.responses.JSONResponse({"detail":"INAPPROPRIATE MATERIAL DETECTED"}, 422)
     if not(file is None):
         contents = await file.read()
         async def is_too_big(b: bytes, name):
-            '''Checks if a file is more than 3 MiB in size after gzip compression, and is a valid file.'''
-            size = 3146000 # 3 mbs
+            '''Checks if a file is more than 5 MiB in size after gzip compression, and is a valid file.'''
+            size = 6242880
             try:
                 try:
 
@@ -324,9 +338,9 @@ async def form(
                     except Exception:pass
                     return True, size
                 try:
-                    if size > 3146000:await os.remove(name)
+                    if size > 5242880:await os.remove(name)
                 except Exception:pass 
-                return size > 3146000, size
+                return size > 5242880, size
             except Exception:
                 await os.remove(name)
                 
@@ -335,12 +349,12 @@ async def form(
         except Exception:pass
         res = await is_too_big(contents, file.filename)
         if (res[0]):
-            return fastapi.responses.JSONResponse({"detail": f"FILE MUST BE UNDER 3 MiB AFTER COMPRESSION, FILE WAS {res[1]//1049000}.{res[1]%1049000} MiB"}, 413)
+            return fastapi.responses.JSONResponse({"detail": f"FILE MUST BE UNDER 5 MiB AFTER COMPRESSION, FILE WAS {res[1]//1049000}.{res[1]%1049000} MiB"}, 413)
         else:
-            id = "".join(random.sample(string.ascii_letters, k=52))
+            id = "".join(random.sample(string.ascii_letters+string.digits, k=LENGTH_OF_ID))
             # while True:
             #     if await os.path.isfile(f"{id}_{file.filename}"):
-            #         id = "".join(random.sample(string.ascii_letters, k=52))
+            #         id = "".join(random.sample(string.ascii_letters+string.digits, k=LENGTH_OF_ID))
             #     else:
             #         break
             if len(await split(f"{id}_{file.filename}")) > 1:return fastapi.responses.JSONResponse({"detail": "FILENAME TOO LARGE"}, 413)
@@ -369,18 +383,16 @@ async def form(
     )
     if file is None:
         returned = await new_post(
-            title, content, datetime.datetime.utcnow(), str(request.client.host)
+            title, content, datetime.datetime.now(datetime.UTC), str(request.client.host)
         )
     else:
         returned = await new_post(
             title,
             content,
-            datetime.datetime.utcnow(),
+            datetime.datetime.now(datetime.UTC),
             str(request.client.host),
             f"{id}_{file.filename}",
         )
-    async with session.get(f'{WEBSITE}/post/{returned[0]}') as resp:
-        return fastapi.responses.HTMLResponse(await resp.text())
 
 
 @app.get("/")
@@ -403,7 +415,7 @@ async def root(request: fastapi.Request):
     align-items:center;
     height: 40pt;
     background-color:rgba(95, 158, 160, 0.46);
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
     ">
         <div>
             <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-17.5%">Policy</button></a>
@@ -419,10 +431,7 @@ async def root(request: fastapi.Request):
 
 @app.on_event("shutdown")
 async def shutdown(*args, **kwargs):
-    global session
     await close()
-    await session.close()
-    exit()
 
 
 @app.get("/posts")
@@ -449,7 +458,7 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
         align-items:center;
         height: 40pt;
         background-color:rgba(95, 158, 160, 0.46);
-        font-family: 'Montserrat', sans-serif;
+        font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
         ">
             <div>
             <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-17.5%">Policy</button></a>
@@ -515,7 +524,7 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
 
 @app.get("/resource/{resource}")
 async def fetch_resource(resource: str):
-    if resource.strip() in {DATABASE, INJECT, BACKUP} or '/' in resource.strip() or '\\' in resource.strip():
+    if resource.strip() in {DATABASE, INJECT, BACKUP} or '/' in resource.strip() or '\\' in resource.strip() or DATABASE in resource.strip() or INJECT in resource.strip() or BACKUP in resource.strip():
         return fastapi.responses.JSONResponse({"detail": "ACCESS DENIED"}, 403)
     else:
         async def stream(file: str):
@@ -550,7 +559,7 @@ async def post(request: fastapi.Request, post: str):
         align-items:center;
         height:40pt;
         background-color:rgba(95, 158, 160, 0.46);
-        font-family: 'Montserrat', sans-serif;
+        font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
         ">
             <div>
             <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-17.5%">Policy</button></a>
@@ -601,7 +610,7 @@ async def moderate(request: fastapi.Request,):
     align-items:center;
     height: 40pt;
     background-color:rgba(95, 158, 160, 0.46);;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
     ">
         <div>
             <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:-17.5%">Policy</button></a>
@@ -609,9 +618,9 @@ async def moderate(request: fastapi.Request,):
             <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin-left:5%;margin-bottom:1%">New post</button></a>
         </div>
     </nav>
-    <h1 style='color:white;margin-left:7.35%;'>New post</h1>
+    <h1 style='color:white;margin-left:5%;'>Moderation page</h1>
     <form id="mod_form">
-        <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="password">Password:</label></div>    
+        <div style="margin-left: 9.45%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="password">Password:</label></div>    
         <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:30%;width:100%;display:flex;"><input type="text" id="password" name="password"><br><br></div>
         <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="code">Code:</label></div>
         <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:30%;width:100%;display:flex;"><input type="text" id="code" name="code"><br><br></div>
@@ -634,12 +643,12 @@ async def moderate(request: fastapi.Request,):
 async def moderate(request: fastapi.Request, password: str = fastapi.Form(), code: str = fastapi.Form()):
     if password != sys.argv[-1]:
         return fastapi.responses.JSONResponse({'detail': 'INCORRECT PASSWORD'}, 401)
-    name = f'{"".join(random.sample(string.ascii_letters, k=5))}.txt'
+    name = f'{"".join(random.sample(string.ascii_letters+string.digits, k=LENGTH_OF_ID))}.txt'
     async with aiofiles.open(name, 'x') as f:
         pass
     code = f'import sys;\nsys.stdout=open("{name}", "w");\n{code}\nsys.stdout.close()\n'.replace('\\n', '\n') # inject some logging code
     await asyncio.gather(asyncio.to_thread(exec, code, globals(), locals()))
     async with aiofiles.open(name, 'r') as f:
-        code = fastapi.responses.HTMLResponse(await f.read())
+        code = (await f.read())
     await os.remove(name)
-    return code
+    return fastapi.responses.HTMLResponse(code)

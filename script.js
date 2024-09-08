@@ -1,4 +1,4 @@
-const WEBSITE = "http://localhost:8000"
+WEBSITE = "http://localhost:3500"
 // const WEBSITE = process.env.DETA_SPACE_APP_HOSTNAME
 
 let _ = function _(el) {
