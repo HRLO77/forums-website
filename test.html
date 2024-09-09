@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{WEBSITE}/resource/dropdown.css">
+    <script src='{WEBSITE}/resource/script.js'></script>
     <title>tips.massey.org</title>
 </head>
 <body style="background:#030303;">
+    
         <nav style="
         display:flexbox;
         justify-content: center;
@@ -17,11 +18,26 @@
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
         ">
             <div>
-                <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
-                <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
-                <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
+                <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: large;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
+                <a href="{WEBSITE}/posts"><button style="color:black;font-size: large;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
+                <a href="{WEBSITE}/new"><button style="color:black;font-size: large;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
             </div>
         </nav>
-    <h1 style='margin-left:47.2%;color:white;'>Root</h1>
+    <h1 style='color:white;margin-left:19%;font-size:largest'>Moderation page</h1>
+    <form id="mod_form">
+        <div style="margin-left: 23%;margin-top:2.60416667%;color:white;border-radius:10px;font-size:large"><label for="password">Password: </label></div>    
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;display:flexbox;"><input type="text" id="password" name="password" style="height:30px;width:60%;font-size:large"><br><br></div>
+        <div style="margin-left: 24%;margin-top:2.60416667%;color:white;border-radius:10px;font-size:large;display:flexbox;"><label for="code">Code: </label></div>
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:50%;width:100%;display:flexbox;"><input type="text" id="code" name="code" style="height:30px;width:90%;font-size:medium"><br><br></div>
+        <div style="margin-left: 23%;margin-top:2.60416667%;color:white;border-radius:10px">
+            <button type="button" onclick="moderate()" style="font-size: large;">Moderate</button>
+        </div>
+    </form>
+    <p style='color:white;margin-left:7.35%;font-size:large'>async def main():\\n  print(await delete_post('',))\\nasyncio.run(main())</p>
+    <br>
+    <p style='color:white;margin-left:7.35%;font-size:large'>async def main():\\n  print(await rep_post('',pin="{SORT_PIN.replace('&', '&amp;')}"))\\nasyncio.run(main())</p>
+    <br>
+    <p style='color:white;margin-left:7.35%;font-size:large'>async def main():\\n  print(await ban_author('',))\\nasyncio.run(main())</p>
+    <br>
 </body>
 </html>

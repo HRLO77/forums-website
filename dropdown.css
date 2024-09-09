@@ -7,7 +7,6 @@
     border:rgba(95, 158, 160, 0.46);
     border-width: 10%;
     border-radius: 20%;
-
     cursor: pointer;
     font-family: 'Montserrat', sans-serif;;
   }
@@ -17,7 +16,7 @@
   }
   
   .dropdown {
-    position: relative;
+    position: left;
     display: inline-block;
   }
   
@@ -31,6 +30,7 @@
     color:white;
     box-shadow: 0% 5% 10% 0% rgba(0,0,0,0.2);
     z-index: 1;
+    border-radius: 20%;
   }
   
   .dropdown-content a {

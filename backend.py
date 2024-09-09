@@ -1,4 +1,5 @@
 import fastapi
+import fastapi.params
 from db_funcs import *  # let the chaos ensue
 import datetime
 import slowapi
@@ -20,7 +21,7 @@ SORT_PIN = '&#128392; Pinned'
 WEBSITE = "http://localhost:3500"
 # WEBSITE = os.environ['DETA_SPACE_APP_HOSTNAME']
 
-SWEARS = {'slt', 'sht', 'fck', 'pss', 'dmn', 'slvt', 'pssy', 'fg', 'fag', 'rtrd', 'tism', 'tsm', 'cnt', 'cvnt', 'bstrd', 'btch', 'wtch', 'bth', 'wth', 'fckr', 'nig', 'nigga', 'gga', 'ngg', 'sx', 'prn', 'porn', 'jw', 'jew', 'vag', 'vgin', 'vagi', 'nl', 'cck', 'dck', 'pns', 'rdn', 'tt', 'bb', 'gn', 'n33r','n3gr', 'ngr'} # credit for kaggle
+SWEARS = {'slt', 'sht', 'fck', 'pss', 'dmn', 'slvt', 'pssy', 'fg', 'fag', 'rtrd', 'tism', 'tsm', 'cnt', 'cvnt', 'bstrd', 'btch', 'wtch', 'bth', 'wth', 'fckr', 'nig', 'nigga', 'gga', 'ngg', 'sx', 'prn', 'porn', 'jw', 'jew', 'vag', 'vgin', 'vagi', 'nl', 'cck', 'dck', 'pns', 'rdn', 'tt', 'bb', 'gn', 'n33r','n3gr', 'ngr', 'cm', 'whr'} # credit for kaggle
 x = {'a': '', 'e': '', 'i': '', 'o': '', 'u': '', 'y': ''}
 x.update({i: '' for i in string.punctuation+string.digits})
 table = str.maketrans(x)
@@ -32,8 +33,8 @@ async def basic_check(s: str):
             return True
     return False
 
-async def split(iter, size: int=470):
-    largest = {
+async def split(iter, size: int=600):
+    special = {
         "@",
         "#",
         "%",
@@ -41,15 +42,15 @@ async def split(iter, size: int=470):
         "$",
     }
     large = {"k", "m", "n", "b", "c", "x", "z", "d", "s", "a", "o", "e", " ", "g"}
-    small = {i for i in string.printable if i not in large or not i in largest}
+    small = {i for i in string.printable if i not in large or not i in special}
     l = []
     cur = 0
     s = ""
     for char in iter:
         cur += (
-            int(char.lower() in large) * 2
+            int(char.lower() in large) * 1.5
             + int(char.lower() in small) * 1.5
-            + int(char.lower() in largest) * 2.5
+            + int(char.lower() in special) * 0.5
         )
         if cur <= size:
             s += char
@@ -91,11 +92,11 @@ async def make_post(
                 <img src="{WEBSITE}/resource/user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
                 <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title}</p>
                 <p style="margin-left: 1.4%;font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" <a style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
-                <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');sleep(1000);points('{str(id).strip()}', '{rand}');">↑</button>
-                <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');sleep(1000);points('{str(id).strip()}', '{rand}');">↓</button>
+                <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↑</button>
+                <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↓</button>
                 <p style="font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
             </div>
-            <div style="margin-left:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed">
+            <div style="margin-left:1.75%;margin-right:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed">
                 <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + (lambda: f'<br><br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}</p>
             </div>
         </div>
@@ -107,7 +108,6 @@ async def make_post(
         <p style="color:white;font-family:'Courier New', Courier, monospace;font-size:large;margin-left:3.3%;margin-top:1.5%">	
             {pin}</p>
         <div>
-            
             <div style="background-color:black;
             margin-top:1.5%;
             margin-left:3.3%;
@@ -121,15 +121,16 @@ async def make_post(
                     <img src="{WEBSITE}/resource/user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
                     <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title}</p>
                     <p style="margin-left: 1.4%;font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" <a style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
-                    <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');sleep(1000);points('{str(id).strip()}', '{rand}');">↑</button>
-                    <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');sleep(1000);points('{str(id).strip()}', '{rand}');">↓</button>
+                    <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↑</button>
+                    <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↓</button>
                     <p style="font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
                 </div>
-                <div style="margin-left:1.75%;font-size:medium;text-rendering:optimizeSpeed">
+                <div style="margin-left:1.75%;margin-right:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed">
                     <p>{('</p><p>'.join(c[:5])) + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + (lambda: f'<br><br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}</p>
                 </div>
             </div>
         </div>
+    </div>
     """
 
 
@@ -268,30 +269,31 @@ async def new(request: fastapi.Request):
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
         ">
             <div>
-                <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
-                <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
-                <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
+                <a href="{WEBSITE}/resource/Privacy policy"><button style="cursor: pointer;color:black;font-size: large;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
+                <a href="{WEBSITE}/posts"><button style="cursor: pointer;color:black;font-size: large;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
+                <a href="{WEBSITE}/new"><button style="cursor: pointer;color:black;font-size: large;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
             </div>
         </nav>
-    <h1 style='color:white;margin-left:7.35%;'>New post</h1>
+    <h1 style='color:white;margin-left:20%;font-size:largest'>New post</h1>
     <form id="post_form">
-        <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="title">Title:</label></div>    
-        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:30%;width:100%;display:flex;"><input type="text" id="title" name="title"><br><br></div>
-        <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="content">Content:</label></div>
-        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:30%;width:100%;display:flex;"><input type="text" id="content" name="content"><br><br></div>
-        <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="file">File:</label></div>
-        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px">
-            <input type="file" id="file" name="file"><br><br>
-            <div id="progressWrapper">
+        <div style="margin-left: 22.5%;margin-top:2.60416667%;color:white;border-radius:10px;font-size:large"><label for="title">Title:</label></div>    
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;display:flexbox;"><input type="text" id="title" name="title" style="height:30px;width:60%;font-size:large"><br><br></div>
+        <div style="margin-left: 22%;margin-top:2.60416667%;color:white;border-radius:10px;font-size:large;display:flexbox;"><label for="content">Content:</label></div>
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:50%;width:100%;display:flexbox;"><input type="text" id="content" name="content" style="height:30px;width:90%;font-size:medium"><br><br></div>
+        <div style="margin-left: 23%;margin-top:2.60416667%;color:white;border-radius:10px;font-size:large;"><label for="file">File:</label></div>
+        <div style="margin-left: 21.5%;margin-top:2.60416667%;color:white;border-radius:10px">
+            <input type="file" id="file" name="file" style="font-size:medium;"><br><br>
+            <div id="progressWrapper" style="margin-left:-5.75%">
                 <div id="progressBar"></div>
             </div>
         </div>
-        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px">
-            <button type="button" onclick="submitForm()">Submit</button>
+        <div style="margin-left: 22.2%;margin-top:2.60416667%;color:white;border-radius:10px">
+            <button type="button" onclick="submitForm()" style="font-size: large;">Submit</button>
         </div>
     </form>
 </body>
 </html>
+
 """
 )
 
@@ -311,6 +313,7 @@ async def points(request: fastapi.Request, post_id: str):
 @limiter.limit("1/minute")
 async def form(
     request: fastapi.Request,
+    pin: str = None,
     title: str = fastapi.Form(),
     content: str = fastapi.Form(),
     file: Optional[fastapi.UploadFile] = fastapi.File(None),
@@ -326,7 +329,7 @@ async def form(
         contents = await file.read()
         async def is_too_big(b: bytes, name):
             '''Checks if a file is more than 5 MiB in size after gzip compression, and is a valid file.'''
-            size = 6242880
+            size = 6245000
             try:
                 try:
 
@@ -338,9 +341,9 @@ async def form(
                     except Exception:pass
                     return True, size
                 try:
-                    if size > 5242880:await os.remove(name)
+                    if size > 5245000:await os.remove(name)
                 except Exception:pass 
-                return size > 5242880, size
+                return size > 5245000, size
             except Exception:
                 await os.remove(name)
                 
@@ -383,7 +386,7 @@ async def form(
     )
     if file is None:
         returned = await new_post(
-            title, content, datetime.datetime.now(datetime.UTC), str(request.client.host)
+            title, content, datetime.datetime.now(datetime.UTC), str(request.client.host), pin=(SORT_PIN if pin==sys.argv[-1] else None)
         )
     else:
         returned = await new_post(
@@ -391,7 +394,7 @@ async def form(
             content,
             datetime.datetime.now(datetime.UTC),
             str(request.client.host),
-            f"{id}_{file.filename}",
+            f"{id}_{file.filename}", pin=(SORT_PIN if pin==sys.argv[-1] else None)
         )
 
 
@@ -418,9 +421,9 @@ async def root(request: fastapi.Request):
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
         ">
             <div>
-                <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
-                <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
-                <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
+                <a href="{WEBSITE}/resource/Privacy policy"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
+                <a href="{WEBSITE}/posts"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
+                <a href="{WEBSITE}/new"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
             </div>
         </nav>
     <h1 style='margin-left:47.2%;color:white;'>Root</h1>
@@ -431,7 +434,13 @@ async def root(request: fastapi.Request):
 
 @app.on_event("shutdown")
 async def shutdown(*args, **kwargs):
-    await close()
+    try:
+        print('Backing up...')
+        await back(BACKUP)
+        print('Closing...')
+        await close()
+    except Exception as e:
+        print('Error on close: ', e)
 
 
 @app.get("/posts")
@@ -461,9 +470,9 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
         ">
             <div>
-                <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
-                <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
-                <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
+                <a href="{WEBSITE}/resource/Privacy policy"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
+                <a href="{WEBSITE}/posts"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
+                <a href="{WEBSITE}/new"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
             </div>
         </nav>
     <div class="dropdown">
@@ -513,8 +522,8 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     for p in ps:page+=await make_post(*p)
     page += f"""
     <br><br><br><br>
-    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn-1}"><button style="color:white;float:left;margin-left:45%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;">&lt;</button></a>
-    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn+1}"><button style="color:white;float:right;margin-right:49%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;">&gt;</button></a>
+    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn-1}"><button style="color:white;float:left;margin-left:47%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;font-size:largest;">&lt;</button></a>
+    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn+1}"><button style="color:white;float:right;margin-right:47%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;font-size:largest;">&gt;</button></a>
     </div>
 </body>
 </body>
@@ -562,22 +571,12 @@ async def post(request: fastapi.Request, post: str):
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
         ">
             <div>
-                <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
-                <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
-                <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
+                <a href="{WEBSITE}/resource/Privacy policy"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
+                <a href="{WEBSITE}/posts"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
+                <a href="{WEBSITE}/new"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
             </div>
         </nav>
-    <div class="dropdown">
-        <button onclick="drop()" class="dropbtn">Sort by:</button>
-        <div id="myDropdown" class="dropdown-content">
-            <a href="{WEBSITE}/posts?sortby=latest">Latest</a>
-            <a href="{WEBSITE}/posts?sortby=oldest">Oldest</a>
-            <a href="{WEBSITE}/posts?sortby=score">Score</a>
-            <a href="{WEBSITE}/posts?sortby=length">Length</a>
-            <a href="{WEBSITE}/posts?sortby=file">File</a>
-            <a href="{WEBSITE}/posts?sortby=file_latest">File latest</a>
-        </div>
-    </div>"""
+>"""
     try:
         p: tuple[str, str, str, str, str, str, str, set[str], set[str]] = await get_post(post)
     except Exception:
@@ -613,27 +612,28 @@ async def moderate(request: fastapi.Request,):
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
         ">
             <div>
-                <a href="{WEBSITE}/resource/Privacy policy"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
-                <a href="{WEBSITE}/posts"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
-                <a href="{WEBSITE}/new"><button style="color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
+                <a href="{WEBSITE}/resource/Privacy policy"><button style="cursor: pointer;color:black;font-size: large;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
+                <a href="{WEBSITE}/posts"><button style="cursor: pointer;color:black;font-size: large;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
+                <a href="{WEBSITE}/new"><button style="cursor: pointer;color:black;font-size: large;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
             </div>
         </nav>
-    <h1 style='color:white;margin-left:5%;'>Moderation page</h1>
+    <h1 style='color:white;margin-left:19%;font-size:largest'>Moderation page</h1>
     <form id="mod_form">
-        <div style="margin-left: 9.45%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="password">Password:</label></div>    
-        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:30%;width:100%;display:flex;"><input type="text" id="password" name="password"><br><br></div>
-        <div style="margin-left: 9.95%;margin-top:2.60416667%;color:white;border-radius:10px"><label for="code">Code:</label></div>
-        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:30%;width:100%;display:flex;"><input type="text" id="code" name="code"><br><br></div>
-        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px">
-            <button type="button" onclick="moderate()">Moderate</button>
+        <div style="margin-left: 23%;margin-top:2.60416667%;color:white;border-radius:10px;font-size:large"><label for="password">Password: </label></div>    
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;display:flexbox;"><input type="text" id="password" name="password" style="height:30px;width:60%;font-size:large"><br><br></div>
+        <div style="margin-left: 24%;margin-top:2.60416667%;color:white;border-radius:10px;font-size:large;display:flexbox;"><label for="code">Code: </label></div>
+        <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:50%;width:100%;display:flexbox;"><input type="text" id="code" name="code" style="height:30px;width:90%;font-size:medium"><br><br></div>
+        <div style="margin-left: 23%;margin-top:2.60416667%;color:white;border-radius:10px">
+            <button type="button" onclick="moderate()" style="font-size: large;">Moderate</button>
         </div>
     </form>
-    <p style='color:white;margin-left:7.35%;'>async def main():\\n  print(await delete_post('',))\\nasyncio.run(main())</p>
+    <p style='color:white;margin-left:7.35%;font-size:large'>async def main():\\n  print(await delete_post("",))\\nasyncio.run(main())</p>
     <br>
-    <p style='color:white;margin-left:7.35%;'>async def main():\\n  print(await rep_post('',pin="{SORT_PIN.replace('&', '&amp;')}"))\\nasyncio.run(main())</p>
+    <p style='color:white;margin-left:7.35%;font-size:large'>async def main():\\n  print(await rep_post("",pin="{SORT_PIN.replace('&', '&amp;')}"))\\nasyncio.run(main())</p>
     <br>
-    <p style='color:white;margin-left:7.35%;'>async def main():\\n  print(await ban_author('',))\\nasyncio.run(main())</p>
+    <p style='color:white;margin-left:7.35%;font-size:large'>async def main():\\n  print(await ban_author("",))\\nasyncio.run(main())</p>
     <br>
+    <p style='color:white;margin-left:7.35%;font-size:large'>async def main():\\n async for i in delete_posts(["", ""]):pass\\nasyncio.run(main())</p>
 </body>
 </html>
 """)
@@ -644,11 +644,8 @@ async def moderate(request: fastapi.Request, password: str = fastapi.Form(), cod
     if password != sys.argv[-1]:
         return fastapi.responses.JSONResponse({'detail': 'INCORRECT PASSWORD'}, 401)
     name = f'{"".join(random.sample(string.ascii_letters+string.digits, k=LENGTH_OF_ID))}.txt'
-    async with aiofiles.open(name, 'x') as f:
-        pass
-    code = f'import sys;\nsys.stdout=open("{name}", "w");\n{code}\nsys.stdout.close()\n'.replace('\\n', '\n') # inject some logging code
-    await asyncio.gather(asyncio.to_thread(exec, code, globals(), locals()))
-    async with aiofiles.open(name, 'r') as f:
-        code = (await f.read())
-    await os.remove(name)
-    return fastapi.responses.HTMLResponse(code)
+    code = f'{code}'.replace('\\n', '\n')
+    try:
+        await asyncio.gather(asyncio.to_thread(exec, code, globals(), locals()))
+    except Exception as e:
+        return fastapi.responses.JSONResponse({'detail': f'ERROR EXECUTING COMMAND: {e}'}, 500)

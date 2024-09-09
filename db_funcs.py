@@ -13,6 +13,7 @@ import pickle
 import aiohttp
 import json
 import sys
+
 sys.path.append(__import__('os').getcwd())
 DATABASE = "database.sqlite3"
 BACKUP = "backup.sqlite3"
@@ -23,15 +24,22 @@ session: aiohttp.ClientSession | None = None
 
 LENGTH_OF_ID = 5
 
-async def handler(data: dict | list, t: int, clean: bool=False):
+async def handler(data: dict | list | tuple, t: int, clean: bool=False):
     '''Handles flow data you dont want to: {'*': 0, 'vote': 1, 'post': 2, 'delete': 3}'''
     global session
+    async with aiomysql.connect() as f:
+        f.c
     types = {'*': 0, 'vote': 1, 'post': 2, 'delete': 3}
     for (flow, dat) in FLOWS.items():
         
         if types[dat['event'].lower()] == t or types[dat['event'].lower()] == 0:
-            if clean:data: dict = {data[0]: [*data[1:5], *data[6:-2], len(data[-2])-len(data[-1])]}
+            
+            if isinstance(data, dict):
+                if clean:data: dict = {id: [*second[1:5], *second[6:-2], len(second[-2])-len(second[-1])] for id, second in data.items()}
+            else:
+                if clean:data: dict = {data[0]: [*data[1:5], *data[6:-2], len(data[-2])-len(data[-1])]}
             data.update({'type': t})
+            
             try:
                 file = dat['file']
                 threaded = dat['threaded']
@@ -47,8 +55,8 @@ async def handler(data: dict | list, t: int, clean: bool=False):
                     await os.remove(fg)
                     g = {i:v for i,v in globals().items()}
                     g['DATA'] = data
-                    if threaded:await asyncio.to_thread(exec, [code, g, {i:v for i,v in locals().items()}])
-                    else:exec(code, g, {i:v for i,v in locals().items()})
+                    if threaded:await asyncio.to_thread(exec, [code, g, locals()])
+                    else:exec(code, g, locals())
                     print(f'Flow {flow} executed {file} given type data {t} on {datetime.datetime.now(datetime.UTC)} UTC.')
                 except Exception as e:print(f'Error when executing function for flow {flow}: {str(e)}')
                 try:
@@ -72,10 +80,10 @@ def load_flows():
 async def rm_files_ids(ids: list[str] | tuple[str] | set[str], fps_passed: bool=False):
     """Removes all files to the corresponding post ids provided.
     :param ids: file paths to files, or post ids."""
-    ids = {i[-5] for i in await get_posts() if i[0] in ids} if not(fps_passed) else ids
+    ids = (i[-5] for i in await get_posts() if i[0] in ids) if not(fps_passed) else ids
     for i in ids:
-        if isinstance(i, str):
-            match = re.match('([a-zA-Z]{52})', i)
+        if i is not None: #used to be isinstance of str
+            match = re.match(F'^([a-zA-Z0-9]{{{LENGTH_OF_ID}}})_', i)
             if (await os.path.isfile(i)) and match!=None:
                 await os.remove(i)
                 
@@ -88,13 +96,14 @@ async def start_conn():
     session = aiohttp.ClientSession(loop=asyncio.get_event_loop())
     files = {i[-5] for i in posts}
     for i in glob.glob('*'):
-        match = re.match('^([a-zA-Z]{52})', i)
+        match = re.match(f'^([a-zA-Z0-9]{{{LENGTH_OF_ID}}}_)', i)
         if (await os.path.isfile(i)) and match!=None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
             if not i in files:
                 await os.remove(i)
     
 async def back(to: str):
     """Backups the main database to the database fp provided."""
+    await cursor.commit()
     to: aiosqlite.Connection = await aiosqlite.connect(to)
     await cursor.backup(to)
     await to.commit()
@@ -102,7 +111,7 @@ async def back(to: str):
     del to
 
 
-async def get_posts() -> list[tuple[str, str, str, str, str, str, str, set[str], set[str]]]:
+async def get_posts() -> tuple[str, str, str, str, str | None, str, str | None, set[str], set[str]]:
     """Returns list[tuple[str, str, str, set[str], set[str]]]. Representing an id, title, content, date, file path, IP, pin, upvotes, and downvotes"""
     res = await cursor.execute("SELECT * FROM posts")
     res = reversed(await res.fetchall())
@@ -111,7 +120,7 @@ async def get_posts() -> list[tuple[str, str, str, str, str, str, str, set[str],
     ]
 
 
-async def get_post(id: str) -> tuple[str, str, str, str, str, str, str, set[str], set[str]]:
+async def get_post(id: str) -> tuple[str, str, str, str, str | None, str, str | None, set[str], set[str]]:
     """Returns tuple[str, str, str]. Representing a id, title, content, date, IP, file path, pin, upvotes, and downvotes."""
     res = await cursor.execute("SELECT * FROM posts WHERE id=?", [id])
     res = await res.fetchone()
@@ -148,6 +157,22 @@ async def update_inject():
     await back(INJECT)
     # print('Started inject testing database.')
 
+async def setup_dbs():
+    '''Clears all databases with no prompts.'''
+    global cursor
+    await (
+        await (
+            await (await cursor.execute("DROP TABLE IF EXISTS posts;")).execute(
+                "DROP TABLE IF EXISTS ips;"
+            )
+        ).execute(
+            "CREATE TABLE posts(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, fp TEXT NULL, ip TEXT NOT NULL, pin TEXT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
+        )
+    ).execute("CREATE TABLE ips(ip TEXT PRIMARY KEY NOT NULL, blacklisted INT);")
+    await cursor.commit()
+    await back(BACKUP)
+    await back(INJECT)
+    
 
 async def new_post(
     title: str,
@@ -155,11 +180,19 @@ async def new_post(
     date: datetime.datetime | str,
     ip: str,
     fp: str | None = None,
-    pin: str | None=None
-) -> tuple[str, str, str, str, str, str, str, set[str], set[str]]:
+    pin: str | None=None,
+    upvotes: set | None = {},
+    downvotes: set | None = {}
+    
+) -> tuple[str, str, str, str, str | None, str, str | None, set[str], set[str]]:
     """Creates a new post with provided data, returns the row in the database as a tuple."""
     date = date.strftime("%Y-%m-%d") if isinstance(date, datetime.datetime) else date
     id = "".join(random.sample(string.ascii_letters+string.digits, k=LENGTH_OF_ID))
+    try:
+        upvotes = (ast.literal_eval(str(upvotes)))
+        downvotes = (ast.literal_eval(str(downvotes)))
+    except Exception:
+        pass
     # while True:
     #     try:
     #         await get_post(id)
@@ -169,10 +202,9 @@ async def new_post(
     #         id = "".join(random.sample(string.ascii_letters+string.digits, k=6))
     await cursor.execute(
         "INSERT INTO posts VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);",
-        [id, title, content, date, fp, ip, pin, "{}", "{}"],
+        [id, title, content, date, fp, ip, pin, f"{upvotes}", f"{downvotes}"],
     )
-    await update_inject()
-    d = await get_post(id)
+    d = (id, title, content, date, fp, ip, pin, upvotes, downvotes)
     await handler(d, 2, True)
     return d
 
@@ -183,28 +215,20 @@ async def delete_ip(ip: str) -> tuple[str, int]:
         await (await cursor.execute("SELECT * FROM ips WHERE ip=?", [ip])).fetchone()
     )
     await cursor.execute("DELETE FROM ips WHERE ip=?", [ip])
-    await update_inject()
     return res
 
 
 async def add_ip(ip: str, blacklisted: bool = False) -> tuple[str, int]:
     """Adds an IP address to the database. Returns the row as a tuple."""
     await cursor.execute("INSERT INTO ips VALUES (?, ?)", (ip, int(blacklisted)))
-    await update_inject()
-    return tuple(
-        await (await cursor.execute("SELECT * FROM ips WHERE ip=?", [ip])).fetchone()
-    )
-
+    return (ip, int(blacklisted))
 
 async def update_ip(ip: str, blacklisted: bool) -> tuple[str, int]:
     """Updates an IP address in the database. Returns the row as a tuple."""
     await cursor.execute(
         "UPDATE ips SET ip=?, blacklisted=?  WHERE ip=?;", (ip, int(blacklisted), ip)
     )
-    await update_inject()
-    return tuple(
-        await (await cursor.execute("SELECT * FROM ips WHERE ip=?", [ip])).fetchone()
-    )
+    return (ip, int(blacklisted))
 
 
 async def get_ips() -> list[tuple[str, int]]:
@@ -222,27 +246,33 @@ async def get_ip(ip: str) -> tuple[str, int]:
 
 async def delete_post(
     id: str,
-) -> tuple[str, str, str, str, str, str, str, set[str], set[str]]:
+) -> tuple[str, str, str, str, str | None, str, str | None, set[str], set[str]]:
     """Removes a post by it's id from the database, returns the database row as a tuple before deletion."""
     post = await get_post(id)
     await cursor.execute("DELETE FROM posts WHERE id=?;", [id])
-    await rm_files_ids({post[-5]}, True)
-    await update_inject()
+    await rm_files_ids((post[-5], ), True)
     await handler(post, 3, True)
     return post
 
+# async def delete_posts(
+#     ids: typing.Iterable[str],
+# ) -> typing.AsyncGenerator[tuple[str, str, str, str, str | None, str, str | None, set[str], set[str]], None,]:
+#     """Removes multiple posts by ids from the database, returns the database rows as a tuple before deletion."""
+#     ids = {i for i in (await get_posts()) if i[0] in ids}  # type: ignore
+#     await rm_file_ids((i[-5] for i in ids), True)
+#     p = map((lambda x: (x[0], (*x[1:5], *x[6:-2], len(x[-1])-len(x[-2])))), filter((lambda x: x[0] in ids), await get_posts()))
+#     await handler(dict(p), 3)
+#     for post in ids:
+#         await cursor.execute("DELETE FROM posts WHERE id=?;", [post[0]])
+#         yield post  # type: ignore
+
 async def delete_posts(
     ids: typing.Iterable[str],
-) -> typing.AsyncGenerator[tuple[str, str, str, str, str, str, str, set[str], set[str]], None,]:
+) -> typing.AsyncGenerator[tuple[str, str, str, str, str | None, str, str | None, set[str], set[str]], None,]:
     """Removes multiple posts by ids from the database, returns the database rows as a tuple before deletion."""
-    ids = {i for i in (await get_posts()) if i[0] in ids}  # type: ignore
-    await rm_file_ids({i[-5] for i in ids}, True)
-    p = map((lambda x: (x[0], (*x[1:5], *x[6:-2], len(x[-1])-len(x[-2])))), filter((lambda x: x[0] in ids), await get_posts()))
-    await handler(dict(p), 3)
+    
     for post in ids:
-        await cursor.execute("DELETE FROM posts WHERE id=?;", [post[0]])
-        await update_inject()
-        yield post  # type: ignore
+        yield await delete_post(post)
 
 
 async def update_post(
@@ -250,20 +280,20 @@ async def update_post(
     title: str,
     content: str,
     date: datetime.datetime | str,
-    ip: str,
     upvotes: set[str],
     downvotes: set[str],
     fp: str | None = None,
-    pin: str|None=None
-) -> tuple[str, str, str, str, str, str, str, set[str], set[str]]:
+    ip: str | None=None,
+    pin: str|None=None,
+
+) -> tuple[str, str, str, str, str | None, str, str | None, set[str], set[str]]:
     """Updates a post with the arguments provided."""
     date = date.strftime("%Y-%m-%d") if isinstance(date, datetime.datetime) else date
     await cursor.execute(
         "UPDATE posts SET id=?,title=?,content=?,date=?,fp=?,ip=?, pin=?, upvotes=?, downvotes=? WHERE id=?",
         [id, title, content, date, fp, ip, pin, f'{upvotes}', f'{downvotes}', id],
     )
-    await update_inject()
-    return await get_post(id)
+    return (id, title, content, date, fp, ip, pin, upvotes, downvotes)
 
 
 async def start_backup():
@@ -307,9 +337,10 @@ async def add_upvote(ip: str, id: str):
     post = await get_post(id)
     # order of post
     # id, title, content, date, fp, ip, pin, upvotes, downvotes
-    d = await update_post(
-        id, post[1], post[2], post[3], ip, {*post[-2], ip}, post[-1], post[4], post[-3], 
-    )
+    # d = await update_post(
+    #     id, post[1], post[2], post[3], ip, {*post[-2], ip}, post[-1], post[4], post[-3], 
+    # )
+    d = await rep_post(id, upvotes={*post[-2], ip}, post=post)
     await handler(d, 1, True)
     return d
 
@@ -322,9 +353,10 @@ async def remove_upvote(ip: str, id: str):
         upvotes.remove(ip)
     except Exception:
         pass
-    d = await update_post(
-        id, post[1], post[2], post[3], ip, upvotes, post[-1], post[4], post[-3]
-    )
+    # d = await update_post(
+    #     id, post[1], post[2], post[3], ip, upvotes, post[-1], post[4], post[-3]
+    # )
+    d = await rep_post(id, upvotes=upvotes, post=post)
     await handler(d, 1, True)
     return d
 
@@ -332,9 +364,10 @@ async def remove_upvote(ip: str, id: str):
 async def add_downvote(ip: str, id: str):
     """Adds a downvote to post id provided."""
     post = await get_post(id)
-    d = await update_post(
-        id, post[1], post[2], post[3], ip, post[-2], {*post[-1], ip}, post[4], post[-3]
-    )
+    # d = await update_post(
+    #     id, post[1], post[2], post[3], post[4], ip, post[6], post[-2], {*post[-1], ip}
+    # )
+    d= await rep_post(id, downvotes={*post[-1], ip}, post=post)
     await handler(d, 1, True)
     return d
 
@@ -343,17 +376,12 @@ async def remove_downvote(ip: str, id: str):
     
     post = await get_post(id)
     downvotes = post[-1]
-    t = 0
     try:
         downvotes.remove(ip)
-        t=1
     except Exception:
         pass
-    d = await update_post(
-        id, post[1], post[2], post[3], ip, post[-2], downvotes, post[4], post[-3]
-    )
-    if t:
-        await handler(d, 1, True)
+    d = await rep_post(ip, downvotes=downvotes, post=post)
+    await handler(d, 1, True)
     return d
 
 
@@ -362,7 +390,7 @@ async def purge_ip(ip: str) -> list[tuple[str, str, str, str, str, str, set[str]
     posts = await (
         await cursor.execute("SELECT * FROM posts WHERE ip=?", [ip])
     ).fetchall()
-    await rm_files_ids({i[-5] for i in posts}, True)
+    await rm_files_ids((i[-5] for i in posts), True)
     await cursor.execute("DELETE FROM posts WHERE ip=?", [ip])
     p = map((lambda x: (x[0], (*x[1:5], *x[6:-2], len(x[-1])-len(x[-2])))), filter((lambda x: x[0] in {i[-5] for i in posts}), await get_posts()))
     await handler(dict(p), 3)
@@ -394,17 +422,19 @@ async def rep_post(
     ip: str|None=None,
     upvotes: set[str]|None=None,
     downvotes: set[str]|None=None,
-    fp: str | None = '',
-    pin: str|None=None
-) -> tuple[str, str, str, str, str, str, str, set[str], set[str]]:
+    fp: str = None,
+    pin: str=None,
+    post: tuple[str, str, str, str, str | None, str, str | None, set[str], set[str]]|None=None
+) -> tuple[str, str, str, str, str | None, str, str | None, set[str], set[str]]:
     """Updates only arguments of post that are provided, rest are not changed."""
     date = date.strftime("%Y-%m-%d") if isinstance(date, datetime.datetime) else date
-    post = await get_post(id)
+    if post is None:
+        post = await get_post(id)
+    query = [id, post[1] if title is None else title, post[2] if content is None else content, post[3] if date is None else date, None if fp == '' else (lambda: post[4] if fp is None else fp)(), post[5] if ip is None else ip, None if pin=='' else (lambda: post[6] if pin is None else pin)(), f'{post[7]}' if upvotes is None else f'{upvotes}', f'{post[8]}' if downvotes is None else f'{downvotes}', id]
     await cursor.execute(
-        "UPDATE posts SET id=?,title=?,content=?,date=?,fp=?,ip=?,pin=?, upvotes=?, downvotes=? WHERE id=?",
-[id, post[1] if title is None else title, post[2] if content is None else content, post[3] if date is None else date, None if fp is None and post[4] is not None else (lambda: post[4] if fp is '' else fp)(), post[5] if ip is None else ip, post[6] if pin is None else pin, f'{post[7]}' if upvotes is None else f'{upvotes}', f'{post[8]}' if downvotes is None else f'{add_downvote}', id],
-    )
-    return await get_post(id)
+        "UPDATE posts SET id=?,title=?,content=?,date=?,fp=?,ip=?,pin=?, upvotes=?, downvotes=? WHERE id=?", query, ) # we need fp and pin to be '' not None.
+    query = query[:-1]
+    return (query[:5], query[-2:], query[5:7])
     
 async def close():
     """Closes connection to database."""
@@ -423,7 +453,13 @@ async def close():
 
 async def create():
     'Creates inject, backup and database files.'
-        
+    global cursor
+    try:
+        await cursor.interrupt()
+        await cursor.commit()
+        await cursor.close()
+    except Exception:
+        pass
     for i in ['database.sqlite3', 'backup.sqlite3', 'inject.sqlite3']:
         if (await os.path.isfile(i)):await os.remove(i)
         async with aiofiles.open(i, 'x'):pass
@@ -438,6 +474,8 @@ async def create():
                 "CREATE TABLE posts(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, fp TEXT NULL, ip TEXT NOT NULL, pin TEXT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
             )
         ).execute("CREATE TABLE ips(ip TEXT PRIMARY KEY NOT NULL, blacklisted INT);")
+    await back(BACKUP)
+    await update_inject()
     await cursor.close()
 
 if __name__ == "__main__":
@@ -469,13 +507,13 @@ if __name__ == "__main__":
                 (await get_posts())[0][0],
                 "t",
                 "t",
-                datetime.datetime.utcnow(),
-                "192.168.2.1",
-                {
-                    "192.168.2.1",
-                },
+                datetime.datetime.now(datetime.UTC),
+                {"192.168.2.1",},
                 {"127.0.0.1"},
-                "test.txt", 'test pin 1'
+                "test.txt",
+                "192.168.2.1",
+                'test pin 1',
+
             )
             print(*await get_posts())
             await add_upvote("rick roll", (await get_posts())[0][0])

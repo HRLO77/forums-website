@@ -1,9 +1,5 @@
-WEBSITE = "http://localhost:3500"
+WEBSITE = "http://localhost:3500";
 // const WEBSITE = process.env.DETA_SPACE_APP_HOSTNAME
-
-let _ = function _(el) {
-    return document.getElementById(el);
-}
   
 function drop() {
     document.getElementById("myDropdown").classList.toggle("show");
@@ -68,7 +64,7 @@ function submitForm() {
             document.getElementById('progressWrapper').style.display = 'none';
             document.getElementById('post_form').reset();
         } else {
-            alert("Error uploading form.");
+            alert(`Error uploading form ${xhr.status}: ${xhr.response}`);
         }
     };
 
@@ -120,7 +116,8 @@ function moderate() {
             // Reset progress bar and form
             document.getElementById('mod_form').reset();
         } else {
-            alert("Error executing command.");
+            
+            alert(`Error executing command ${xhr.status}: ${xhr.response}`);
         }
     };
 
