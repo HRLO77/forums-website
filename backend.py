@@ -21,9 +21,9 @@ SORT_PIN = '&#128392; Pinned'
 WEBSITE = "http://localhost:3500"
 # WEBSITE = os.environ['DETA_SPACE_APP_HOSTNAME']
 
-SWEARS = {'slt', 'sht', 'fck', 'pss', 'dmn', 'slvt', 'pssy', 'fg', 'fag', 'rtrd', 'tism', 'tsm', 'cnt', 'cvnt', 'bstrd', 'btch', 'wtch', 'bth', 'wth', 'fckr', 'nig', 'nigga', 'gga', 'ngg', 'sx', 'prn', 'porn', 'jw', 'jew', 'vag', 'vgin', 'vagi', 'nl', 'cck', 'dck', 'pns', 'rdn', 'tt', 'bb', 'gn', 'n33r','n3gr', 'ngr', 'cm', 'whr'} # credit for kaggle
+SWEARS = {'sl*t', 'sh*t', 'f*ck', 'p*ss', 'd*mn', 'slvt', 'p*ss*', 'f*g', 'fag', 'r*t*rd', 'r*trd', 'tism', 't*sm', 'c*nt', 'cvnt', 'b*st*rd', 'b*tch', 'w*tch', 'b*th', 'f*ckr', 'f*ck*r', 'n*g', 'n*gga', '*gga', 'n*gg', 's*x', 'p*rn', 'prn', 'j*w', 'v*g', 'v*g*n', 'v*g*', 'c*c', 'd*c', 'p*n*s', 'r*d*n', 'r*dn', 't*t', 'b**b', 'g*n', 'n33r','n3gr', 'ngr', 'c*m', 'wh*r', 'wh*r*'} # credit for kaggle
 x = {'a': '', 'e': '', 'i': '', 'o': '', 'u': '', 'y': ''}
-x.update({i: '' for i in string.punctuation+string.digits})
+x.update({i: '*' for i in string.punctuation+string.digits})
 table = str.maketrans(x)
 
 async def basic_check(s: str):
