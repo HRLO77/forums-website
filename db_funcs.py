@@ -434,7 +434,7 @@ async def rep_post(
     await cursor.execute(
         "UPDATE posts SET id=?,title=?,content=?,date=?,fp=?,ip=?,pin=?, upvotes=?, downvotes=? WHERE id=?", query, ) # we need fp and pin to be '' not None.
     query = query[:-1]
-    return (query[:5], query[-2:], query[5:7])
+    return (*query[:5], *query[5:7], *query[-2:])
     
 async def close():
     """Closes connection to database."""
