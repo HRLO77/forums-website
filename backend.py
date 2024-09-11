@@ -34,6 +34,7 @@ async def basic_check(s: str):
     return False
 
 async def split(iter, size: int=600):
+    
     special = {
         "@",
         "#",
@@ -42,7 +43,7 @@ async def split(iter, size: int=600):
         "$",
     }
     large = {"k", "m", "n", "b", "c", "x", "z", "d", "s", "a", "o", "e", " ", "g"}
-    small = {i for i in string.printable if i not in large or not i in special}
+    small = {i for i in string.printable.lower() if i not in large or not i in special}
     l = []
     cur = 0
     s = ""
@@ -55,8 +56,9 @@ async def split(iter, size: int=600):
         if cur <= size:
             s += char
         else:
+            
             l.append(s)
-            s = ""
+            s = char
             cur = 0
     l.append(s)
     return l
