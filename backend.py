@@ -249,7 +249,9 @@ async def new(request: fastapi.Request):
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src='{WEBSITE}/resource/script.js'></script>
-    <title>tips.massey.org</title>
+    <title>Massey Tips</title>
+    <link rel="icon" href="{WEBSITE}/resource/favicon.ico" />
+
     <style>
     #progressWrapper {{
         display: none;
@@ -375,6 +377,8 @@ async def form(
             await os_copy(file.filename, f"{STORE_DIR}{id}_{file.filename}")
     if len(await split(title, 300)) > 1:
         return fastapi.responses.JSONResponse({"detail":"TITLE TOO LARGE"}, 413)
+    if len(await split(content)) > 15:
+        return fastapi.responses.JSONResponse({"detail":"CONTENT TOO LARGE"}, 413)
     title = "".join(
         i
         for i in title.replace("<", "&lt;")
@@ -420,7 +424,9 @@ async def root(request: fastapi.Request):
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{WEBSITE}/resource/dropdown.css">
-    <title>tips.massey.org</title>
+    <title>Massey Tips</title>
+    <link rel="icon" href="{WEBSITE}/resource/favicon.ico" />
+
 </head>
 <body style="background:#030303;">
         <nav style="
@@ -465,7 +471,9 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{WEBSITE}/resource/dropdown.css">
-    <title>tips.massey.org</title>
+    <title>Massey Tips</title>
+    <link rel="icon" href="{WEBSITE}/resource/favicon.ico" />
+
     
 </head>
 <body style="background:#030303;">
@@ -569,7 +577,9 @@ async def post(request: fastapi.Request, post: str):
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <title>tips.massey.org</title>
+    <title>Massey Tips</title>
+    <link rel="icon" href="{WEBSITE}/resource/favicon.ico" />
+
     
 </head>
 <body style="background:#030303;">
@@ -612,7 +622,9 @@ async def moderate(request: fastapi.Request,):
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src='{WEBSITE}/resource/script.js'></script>
-    <title>tips.massey.org</title>
+    <title>Massey Tips</title>
+    <link rel="icon" href="{WEBSITE}/resource/favicon.ico" />
+
 </head>
 <body style="background:#030303;">
     
