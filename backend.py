@@ -551,7 +551,7 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
 
 @app.get("/resource/")
 @limiter.limit('20/minute')
-async def fetch_resource(request: fastapi.Request, resource: str = fastapi.Path()):
+async def fetch_resource(request: fastapi.Request, resource: str):
     if resource.strip() in {DATABASE, INJECT, BACKUP}:
         return fastapi.responses.JSONResponse({"detail": "ACCESS DENIED"}, 403)
     
