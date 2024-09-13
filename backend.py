@@ -539,9 +539,10 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     for p in ps:page+=await make_post(*p)
     page += f"""
     <br><br><br><br>
-    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn-1}"><button style="color:white;float:left;margin-left:47%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;font-size:largest;">&lt;</button></a>
-    <a href="{WEBSITE}/posts?sortby={sortby}&pgn={pgn+1}"><button style="color:white;float:right;margin-right:47%;font-size:larger;border-color:cadetblue;background-color:#030303;border-radius:15%;width:2.2%;height:3%;display:flexbox;font-size:largest;">&gt;</button></a>
-    </div>
+        <div style="flex-direction:row;justify-content:space-evenly;align-items:center;display:flex;">
+            <a href="https://massey-tips.fly.dev/posts?sortby=latest&pgn=-1"><button style="color:white;font-size:xx-large;border-color:cadetblue;background-color:#030303;border-radius:15%">&lt;</button></a>
+            <a href="https://massey-tips.fly.dev/posts?sortby=latest&pgn=1"><button style="color:white;font-size:xx-large;border-color:cadetblue;background-color:#030303;border-radius:15%">&gt;</button></a>
+        </div>
 </body>
 </body>
 </html>"""
