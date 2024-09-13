@@ -9,7 +9,6 @@ from slowapi import util
 import string
 import json
 import random
-import aiohttp
 import gzip
 from aiofiles import os
 import tracemalloc
@@ -18,7 +17,9 @@ import sys
 from typing import Optional
 
 SORT_PIN = '&#128392; Pinned'
-WEBSITE = "http://localhost:3500"
+WEBSITE = ""
+
+
 # WEBSITE = os.environ['DETA_SPACE_APP_HOSTNAME']
 
 SWEARS = {'sl*t', 'sh*t', 'f*ck', 'p*ss', 'd*mn', 'slvt', 'p*ss*', 'f*g', 'fag', 'r*t*rd', 'r*trd', 'tism', 't*sm', 'c*nt', 'cvnt', 'b*st*rd', 'b*tch', 'w*tch', 'b*th', 'f*ckr', 'f*ck*r', 'n*g', 'n*gga', '*gga', 'n*gg', 's*x', 'p*rn', 'prn', 'j*w', 'v*g', 'v*g*n', 'v*g*', 'c*c', 'd*c', 'p*n*s', 'r*d*n', 'r*dn', 't*t', 'b**b', 'g*n', 'n33r','n3gr', 'ngr', 'c*m', 'wh*r', 'wh*r*'} # credit for kaggle
@@ -74,9 +75,11 @@ async def make_post(
     pin: str=None,
     upvotes: set[str]=set(),
     downvotes: set[str]=set(),
-    shortened: bool = True, show_file: bool=False
+    shortened: bool = True
 ):
     rand = "".join(random.sample(string.ascii_letters+string.digits, k=LENGTH_OF_ID))
+    if file is not None:
+        filename = file[len(STORE_DIR):]
     c: list[str] = await split(content) # type: ignore
     if pin is None:
         return f"""
@@ -99,7 +102,7 @@ async def make_post(
                 <p style="font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
             </div>
             <div style="margin-left:1.75%;margin-right:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed">
-                <p>{('</p><p>'.join(c[:5])) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
+                <p>{('</p><p>'.join(c[:5])) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
             </div>
         </div>
     </div>
@@ -128,7 +131,7 @@ async def make_post(
                     <p style="font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
                 </div>
                 <div style="margin-left:1.75%;margin-right:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed">
-                    <p>{('</p><p>'.join(c[:5])) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[LENGTH_OF_ID+1:]}</a>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{file[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
+                    <p>{('</p><p>'.join(c[:5])) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{filename[LENGTH_OF_ID+1:]}</a>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/{file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
                 </div>
             </div>
         </div>
@@ -148,11 +151,16 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 @app.on_event("startup")
 async def start(*args, **kwargs):
     tracemalloc.start()
-    await start_conn()
-    try:await asyncio.to_thread(subprocess.run, ['python', 'flow_loader.py'])
-    except Exception as e:print(f'Error loading flows in backend: {e}')
-    await asyncio.to_thread(load_flows)
-
+    try:
+        await setup_dbs(True)
+        try:await asyncio.to_thread(subprocess.run, ['python', 'flow_loader.py'])
+        except Exception as e:print(f'Error loading flows in backend: {e}')
+        await asyncio.to_thread(load_flows)
+    except Exception as e:
+        print('Error on start up:', e, '. \n\n Attempting to restart all dbs...')
+        await setup_dbs()
+    if (await os.path.isdir('/app_data')):
+        print(await os.listdir('/app_data'))
 
 @app.middleware("http")
 async def evaluate_ip(request: fastapi.Request, call_next):
@@ -263,18 +271,17 @@ async def new(request: fastapi.Request):
 <body style="background:#030303;">
     
         <nav style="
-        display:flexbox;
-        justify-content: center;
+        display:flex;
+        justify-content:space-evenly;
         align-items:center;
         height: 100pt;
         background-color:rgba(95, 158, 160, 0.46);
-        font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
+        font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;flex-direction:row;
         ">
-            <div>
-                <a href="{WEBSITE}/resource/Privacy policy"><button style="cursor: pointer;color:black;font-size: large;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
-                <a href="{WEBSITE}/posts"><button style="cursor: pointer;color:black;font-size: large;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
-                <a href="{WEBSITE}/new"><button style="cursor: pointer;color:black;font-size: large;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
-            </div>
+            <a href="{WEBSITE}/resource/Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
+            </a>
+            <a href="{WEBSITE}/posts"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">All posts</button></a>
+            <a href="{WEBSITE}/new"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">New post</button></a>
         </nav>
     <h1 style='color:white;margin-left:20%;font-size:largest'>New post</h1>
     <form id="post_form">
@@ -327,6 +334,8 @@ async def form(
         return fastapi.responses.JSONResponse({"detail":"INAPPROPRIATE MATERIAL DETECTED"}, 422)
     elif ((await basic_check(title))):
         return fastapi.responses.JSONResponse({"detail":"INAPPROPRIATE MATERIAL DETECTED"}, 422)
+    title = title.replace('   ', '').replace('  ', ' ')  # remove extra white spaces
+    content = content.replace('   ', '').replace('  ', ' ')
     if not(file is None):
         contents = await file.read()
         async def is_too_big(b: bytes, name):
@@ -363,7 +372,7 @@ async def form(
             #     else:
             #         break
             if len(await split(f"{id}_{file.filename}")) > 1:return fastapi.responses.JSONResponse({"detail": "FILENAME TOO LARGE"}, 413)
-            await os.rename(file.filename, f"{id}_{file.filename}")
+            await os_copy(file.filename, f"{STORE_DIR}{id}_{file.filename}")
     if len(await split(title, 300)) > 1:
         return fastapi.responses.JSONResponse({"detail":"TITLE TOO LARGE"}, 413)
     title = "".join(
@@ -396,7 +405,7 @@ async def form(
             content,
             datetime.datetime.now(datetime.UTC),
             str(request.client.host),
-            f"{id}_{file.filename}", pin=(SORT_PIN if pin==sys.argv[-1] else None)
+            f"{STORE_DIR}{id}_{file.filename}", pin=(SORT_PIN if pin==sys.argv[-1] else None)
         )
 
 
@@ -415,18 +424,17 @@ async def root(request: fastapi.Request):
 </head>
 <body style="background:#030303;">
         <nav style="
-        display:flexbox;
-        justify-content: center;
+        display:flex;
+        justify-content:space-evenly;
         align-items:center;
         height: 100pt;
         background-color:rgba(95, 158, 160, 0.46);
-        font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
+        font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;flex-direction:row;
         ">
-            <div>
-                <a href="{WEBSITE}/resource/Privacy policy"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
-                <a href="{WEBSITE}/posts"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
-                <a href="{WEBSITE}/new"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
-            </div>
+            <a href="{WEBSITE}/resource/Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
+            </a>
+            <a href="{WEBSITE}/posts"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">All posts</button></a>
+            <a href="{WEBSITE}/new"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">New post</button></a>
         </nav>
     <h1 style='margin-left:47.2%;color:white;'>Root</h1>
 </body>
@@ -438,7 +446,7 @@ async def root(request: fastapi.Request):
 async def shutdown(*args, **kwargs):
     try:
         print('Backing up...')
-        await back(BACKUP)
+        await update_inject()
         print('Closing...')
         await close()
     except Exception as e:
@@ -464,18 +472,17 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     <script src='{WEBSITE}/resource/script.js'></script>
     <div style="background: #030303">
         <nav style="
-        display:flexbox;
-        justify-content: center;
+        display:flex;
+        justify-content:space-evenly;
         align-items:center;
         height: 100pt;
         background-color:rgba(95, 158, 160, 0.46);
-        font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
+        font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;flex-direction:row;
         ">
-            <div>
-                <a href="{WEBSITE}/resource/Privacy policy"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
-                <a href="{WEBSITE}/posts"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
-                <a href="{WEBSITE}/new"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
-            </div>
+            <a href="{WEBSITE}/resource/Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
+            </a>
+            <a href="{WEBSITE}/posts"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">All posts</button></a>
+            <a href="{WEBSITE}/new"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">New post</button></a>
         </nav>
     <div class="dropdown">
         <button onclick="drop()" class="dropbtn">Sort by:</button>
@@ -535,16 +542,21 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
 
 @app.get("/resource/{resource}")
 async def fetch_resource(resource: str):
-    if resource.strip() in {DATABASE, INJECT, BACKUP} or '/' in resource.strip() or '\\' in resource.strip() or DATABASE in resource.strip() or INJECT in resource.strip() or BACKUP in resource.strip():
+    if resource.strip() in {DATABASE, INJECT, BACKUP}:
         return fastapi.responses.JSONResponse({"detail": "ACCESS DENIED"}, 403)
-    else:
-        async def stream(file: str):
-            async with aiofiles.open(file, 'rb') as rb:
-                contents = await rb.read()
-                try:contents = await asyncio.to_thread(gzip.decompress, contents)
-                except Exception:pass
-                yield contents
-        return fastapi.responses.StreamingResponse(stream(resource))
+    
+    match = re.match(f'^{STORE_DIR}([a-zA-Z0-9]{{{LENGTH_OF_ID}}})_', resource)
+    if match is None:
+        if '/' in resource.strip() or '\\' in resource.strip() or DATABASE in resource.strip() or INJECT in resource.strip() or BACKUP in resource.strip():
+            return fastapi.responses.JSONResponse({"detail": "ACCESS DENIED"}, 403)
+        
+    async def stream(file: str):
+        async with aiofiles.open(file, 'rb') as rb:
+            contents = await rb.read()
+            try:contents = await asyncio.to_thread(gzip.decompress, contents)
+            except Exception:pass
+            yield contents
+    return fastapi.responses.StreamingResponse(stream(resource))
 
 
 @app.get("/post/{post}")
@@ -565,20 +577,19 @@ async def post(request: fastapi.Request, post: str):
     <script src='{WEBSITE}/resource/script.js'></script>
     <div style="background: #030303">
         <nav style="
-        display:flexbox;
-        justify-content: center;
+        display:flex;
+        justify-content:space-evenly;
         align-items:center;
         height: 100pt;
         background-color:rgba(95, 158, 160, 0.46);
-        font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
+        font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;flex-direction:row;
         ">
-            <div>
-                <a href="{WEBSITE}/resource/Privacy policy"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
-                <a href="{WEBSITE}/posts"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
-                <a href="{WEBSITE}/new"><button style="cursor: pointer;color:black;font-size: larger;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
-            </div>
+            <a href="{WEBSITE}/resource/Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
+            </a>
+            <a href="{WEBSITE}/posts"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">All posts</button></a>
+            <a href="{WEBSITE}/new"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">New post</button></a>
         </nav>
->"""
+"""
     try:
         p: tuple[str, str, str, str, str, str, str, set[str], set[str]] = await get_post(post)
     except Exception:
@@ -606,18 +617,17 @@ async def moderate(request: fastapi.Request,):
 <body style="background:#030303;">
     
         <nav style="
-        display:flexbox;
-        justify-content: center;
+        display:flex;
+        justify-content:space-evenly;
         align-items:center;
         height: 100pt;
         background-color:rgba(95, 158, 160, 0.46);
-        font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;
+        font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;flex-direction:row;
         ">
-            <div>
-                <a href="{WEBSITE}/resource/Privacy policy"><button style="cursor: pointer;color:black;font-size: large;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:left;margin:2.2%;margin-left:30%;height:50px;width:100px;margin-right:9%">Policy</button></a>
-                <a href="{WEBSITE}/posts"><button style="cursor: pointer;color:black;font-size: large;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:none;margin:2.2%;height:50px;width:100px">All posts</button></a>
-                <a href="{WEBSITE}/new"><button style="cursor: pointer;color:black;font-size: large;border-radius:5px;background-color:rgba(74, 142, 182, 0.485);float:right;margin:2.2%;margin-right:30%;height:50px;width:100px;margin-left:8.5%">New post</button></a>
-            </div>
+            <a href="{WEBSITE}/resource/Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
+            </a>
+            <a href="{WEBSITE}/posts"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">All posts</button></a>
+            <a href="{WEBSITE}/new"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">New post</button></a>
         </nav>
     <h1 style='color:white;margin-left:19%;font-size:largest'>Moderation page</h1>
     <form id="mod_form">
@@ -643,11 +653,13 @@ async def moderate(request: fastapi.Request,):
 @app.post('/mod_in')
 @limiter.limit('10/minute')
 async def moderate(request: fastapi.Request, password: str = fastapi.Form(), code: str = fastapi.Form()):
-    if password != sys.argv[-1]:
+    if (password.strip()) != sys.argv[-1]:
         return fastapi.responses.JSONResponse({'detail': 'INCORRECT PASSWORD'}, 401)
     name = f'{"".join(random.sample(string.ascii_letters+string.digits, k=LENGTH_OF_ID))}.txt'
     code = f'{code}'.replace('\\n', '\n')
+    await update_inject()
     try:
         await asyncio.gather(asyncio.to_thread(exec, code, globals(), locals()))
     except Exception as e:
         return fastapi.responses.JSONResponse({'detail': f'ERROR EXECUTING COMMAND: {e}'}, 500)
+    
