@@ -14,10 +14,12 @@ import aiohttp
 import json
 import sys
 
+STORE_DIR = "/data/"
+
 sys.path.append(__import__('os').getcwd())
-DATABASE = "database.sqlite3"
-BACKUP = "backup.sqlite3"
-INJECT = "inject.sqlite3"
+DATABASE = STORE_DIR+"database.sqlite3"
+BACKUP = STORE_DIR+"backup.sqlite3"
+INJECT = STORE_DIR+"inject.sqlite3"
 FLOWS = {}
 cursor: aiosqlite.Connection = aiosqlite.connect(DATABASE)
 session: aiohttp.ClientSession | None = None
@@ -27,8 +29,6 @@ LENGTH_OF_ID = 5
 async def handler(data: dict | list | tuple, t: int, clean: bool=False):
     '''Handles flow data you dont want to: {'*': 0, 'vote': 1, 'post': 2, 'delete': 3}'''
     global session
-    async with aiomysql.connect() as f:
-        f.c
     types = {'*': 0, 'vote': 1, 'post': 2, 'delete': 3}
     for (flow, dat) in FLOWS.items():
         
@@ -83,8 +83,8 @@ async def rm_files_ids(ids: list[str] | tuple[str] | set[str], fps_passed: bool=
     ids = (i[-5] for i in await get_posts() if i[0] in ids) if not(fps_passed) else ids
     for i in ids:
         if i is not None: #used to be isinstance of str
-            match = re.match(F'^([a-zA-Z0-9]{{{LENGTH_OF_ID}}})_', i)
-            if (await os.path.isfile(i)) and match!=None:
+            match = re.match(f'^{STORE_DIR}([a-zA-Z0-9]{{{LENGTH_OF_ID}}})_', i)
+            if (await os.path.isfile(i)) and match is not None:
                 await os.remove(i)
                 
 async def start_conn():
@@ -96,8 +96,8 @@ async def start_conn():
     session = aiohttp.ClientSession(loop=asyncio.get_event_loop())
     files = {i[-5] for i in posts}
     for i in glob.glob('*'):
-        match = re.match(f'^([a-zA-Z0-9]{{{LENGTH_OF_ID}}}_)', i)
-        if (await os.path.isfile(i)) and match!=None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
+        match = re.match(f'^{STORE_DIR}([a-zA-Z0-9]{{{LENGTH_OF_ID}}})_', i)
+        if (await os.path.isfile(i)) and match is not None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
             if not i in files:
                 await os.remove(i)
     
@@ -134,7 +134,7 @@ async def start():
         in input("Continuing will restart database.sqlite3, proceed? (Y/N): ").lower()
     ):
         if "y" in input("Backup current state? (Y/N): ").lower():
-            await back(BACKUP)
+            await update_inject()
         await (
             await (
                 await (await cursor.execute("DROP TABLE IF EXISTS posts;")).execute(
@@ -157,22 +157,59 @@ async def update_inject():
     await back(INJECT)
     # print('Started inject testing database.')
 
-async def setup_dbs():
-    '''Clears all databases with no prompts.'''
+async def setup_dbs(move: bool=False):
+    '''Clears all databases with no prompts. Ifmove is true, moves all dbs to the STORE_DIR'''
     global cursor
-    await (
+    x=1
+    if move:
+        for i in ('database.sqlite3', 'inject.sqlite3'):
+            if (await os.path.isfile(i)) and not((await os.path.isfile(STORE_DIR+i))):
+                await os_copy(i, STORE_DIR+i)
+            elif not(await os.path.isfile(STORE_DIR+i)):
+                print('Could not find ', STORE_DIR+i, ' while moving DBs, creating new...')
+                async with aiofiles.open(STORE_DIR+i, 'x'):
+                    x=0
+                
+    else:
+        await start_conn()
         await (
-            await (await cursor.execute("DROP TABLE IF EXISTS posts;")).execute(
-                "DROP TABLE IF EXISTS ips;"
+            await (
+                await (await cursor.execute("DROP TABLE IF EXISTS posts;")).execute(
+                    "DROP TABLE IF EXISTS ips;"
+                )
+            ).execute(
+                "CREATE TABLE posts(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, fp TEXT NULL, ip TEXT NOT NULL, pin TEXT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
             )
-        ).execute(
-            "CREATE TABLE posts(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, fp TEXT NULL, ip TEXT NOT NULL, pin TEXT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
-        )
-    ).execute("CREATE TABLE ips(ip TEXT PRIMARY KEY NOT NULL, blacklisted INT);")
-    await cursor.commit()
-    await back(BACKUP)
-    await back(INJECT)
+        ).execute("CREATE TABLE ips(ip TEXT PRIMARY KEY NOT NULL, blacklisted INT);")
     
+        await cursor.commit()
+        await back(INJECT)
+        return
+    if x==0:
+        cursor = await aiosqlite.connect(DATABASE)
+        await (
+            await (
+                await (await cursor.execute("DROP TABLE IF EXISTS posts;")).execute(
+                    "DROP TABLE IF EXISTS ips;"
+                )
+            ).execute(
+                "CREATE TABLE posts(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, fp TEXT NULL, ip TEXT NOT NULL, pin TEXT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
+            )
+        ).execute("CREATE TABLE ips(ip TEXT PRIMARY KEY NOT NULL, blacklisted INT);")
+    else:
+        await start_conn()
+    await cursor.commit()
+    await update_inject()
+    
+async def os_copy(src: str, dest: str):
+    '''Copys a file to its destination asynchronously'''
+    if not(await os.path.isfile(dest)):
+        async with aiofiles.open(dest, 'x') as f:
+            pass
+    async with aiofiles.open(dest, 'wb') as f:
+        async with aiofiles.open(src, 'rb') as r:
+            await f.write(await r.read())
+    await os.remove(src)
 
 async def new_post(
     title: str,
@@ -296,22 +333,22 @@ async def update_post(
     return (id, title, content, date, fp, ip, pin, upvotes, downvotes)
 
 
-async def start_backup():
-    """Restarts the backup database."""
-    if "y" in input("Restart backup database (Y/N)?: ").lower():
-        cursor = await aiosqlite.connect(BACKUP)
-        await (
-            await (
-                await (await cursor.execute("DROP TABLE IF EXISTS posts;")).execute(
-                    "DROP TABLE IF EXISTS ips;"
-                )
-            ).execute(
-                "CREATE TABLE posts(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, fp TEXT NULL, ip TEXT NOT NULL, pin TEXT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
-            )
-        ).execute("CREATE TABLE ips(ip TEXT PRIMARY KEY NOT NULL, blacklisted INT);")
-        await cursor.commit()
-        await cursor.close()
-        print("Backup deleted.")
+# async def start_backup():
+#     """Restarts the backup database."""
+#     if "y" in input("Restart backup database (Y/N)?: ").lower():
+#         cursor = await aiosqlite.connect(BACKUP)
+#         await (
+#             await (
+#                 await (await cursor.execute("DROP TABLE IF EXISTS posts;")).execute(
+#                     "DROP TABLE IF EXISTS ips;"
+#                 )
+#             ).execute(
+#                 "CREATE TABLE posts(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, fp TEXT NULL, ip TEXT NOT NULL, pin TEXT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
+#             )
+#         ).execute("CREATE TABLE ips(ip TEXT PRIMARY KEY NOT NULL, blacklisted INT);")
+#         await cursor.commit()
+#         await cursor.close()
+#         print("Backup deleted.")
 
 
 async def is_inject(query: str) -> bool:
@@ -436,15 +473,20 @@ async def rep_post(
     query = query[:-1]
     return (*query[:5], *query[5:7], *query[-2:])
     
+    
+
+    
 async def close():
     """Closes connection to database."""
     global session
-    await session.close()
+    global cursor
+    if isinstance(session, aiohttp.ClientSession):
+        await session.close()
     posts = await get_posts()
     files = {i[-5] for i in posts}
     for i in glob.glob('*'):
-        match = re.match(f'^([a-zA-Z0-9]{{{LENGTH_OF_ID}}})_', i)
-        if (await os.path.isfile(i)) and match!=None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
+        match = re.match(f'^{STORE_DIR}([a-zA-Z0-9]{{{LENGTH_OF_ID}}})_', i)
+        if (await os.path.isfile(i)) and match is not None:#cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg
             if not i in files:
                 # print('requirements met', i)
                 await os.remove(i)
@@ -460,9 +502,9 @@ async def create():
         await cursor.close()
     except Exception:
         pass
-    for i in ['database.sqlite3', 'backup.sqlite3', 'inject.sqlite3']:
+    for i in [DATABASE, INJECT]:
         if (await os.path.isfile(i)):await os.remove(i)
-        async with aiofiles.open(i, 'x'):pass
+        async with aiofiles.open(i, 'x') as f:pass
         
     cursor = await aiosqlite.connect(DATABASE)
     await (
@@ -474,7 +516,6 @@ async def create():
                 "CREATE TABLE posts(id TEXT PRIMARY KEY NOT NULL,title TEXT NOT NULL,content TEXT NOT NULL,date TEXT NOT NULL, fp TEXT NULL, ip TEXT NOT NULL, pin TEXT NULL, upvotes TEXT NOT NULL, downvotes TEXT NOT NULL);"
             )
         ).execute("CREATE TABLE ips(ip TEXT PRIMARY KEY NOT NULL, blacklisted INT);")
-    await back(BACKUP)
     await update_inject()
     await cursor.close()
 
@@ -483,7 +524,7 @@ if __name__ == "__main__":
         
         await start_conn()
         await start()
-        await start_backup()
+        #await start_backup()
         if "y" in input("Perform database tests? (Y/N): ").lower():
             pickled: tuple[bytes] = pickle.load(open('./data.pickle', 'rb'))
             if not (await os.path.isfile('cREaxqyiMBHIXvQKWkVCJlDmdeuPNgoSrbhpjGfUzFAZYOsLnwtT_user.jpeg')):
