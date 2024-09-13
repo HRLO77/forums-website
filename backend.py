@@ -92,9 +92,9 @@ async def make_post(
         border-style:solid;
         color:white;
         border-color:rgba(95, 158, 160, 0.46);">
-            <script src='{WEBSITE}/resource?resource=script.js'></script>
+            <script src='{WEBSITE}/resource/?resource=script.js'></script>
             <div>
-                <img src="{WEBSITE}/resource?resource=user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
+                <img src="{WEBSITE}/resource/?resource=user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
                 <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title}</p>
                 <p style="margin-left: 1.4%;font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
                 <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↑</button>
@@ -102,7 +102,7 @@ async def make_post(
                 <p style="font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
             </div>
             <div style="margin-left:1.75%;margin-right:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed">
-                <p>{('</p><p>'.join(c[:5])) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
+                <p>{('</p><p>'.join(c[:5])) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
             </div>
         </div>
     </div>
@@ -121,9 +121,9 @@ async def make_post(
             border-style:solid;
             color:white;
             border-color:rgba(95, 158, 160, 0.46);">
-                <script src='{WEBSITE}/resource?resource=script.js'></script>
+                <script src='{WEBSITE}/resource/?resource=script.js'></script>
                 <div>
-                    <img src="{WEBSITE}/resource?resource=user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
+                    <img src="{WEBSITE}/resource/?resource=user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
                     <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title}</p>
                     <p style="margin-left: 1.4%;font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
                     <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↑</button>
@@ -131,7 +131,7 @@ async def make_post(
                     <p style="font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
                 </div>
                 <div style="margin-left:1.75%;margin-right:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed">
-                    <p>{('</p><p>'.join(c[:5])) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
+                    <p>{('</p><p>'.join(c[:5])) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
                 </div>
             </div>
         </div>
@@ -248,9 +248,9 @@ async def new(request: fastapi.Request):
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src='{WEBSITE}/resource?resource=script.js'></script>
+    <script src='{WEBSITE}/resource/?resource=script.js'></script>
     <title>Massey Tips</title>
-    <link rel="icon" href="{WEBSITE}/resource?resource=favicon.ico" />
+    <link rel="icon" href="{WEBSITE}/resource/?resource=favicon.ico" />
 
     <style>
     #progressWrapper {{
@@ -280,7 +280,7 @@ async def new(request: fastapi.Request):
         background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;flex-direction:row;
         ">
-            <a href="{WEBSITE}/resource?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
+            <a href="{WEBSITE}/resource/?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
             </a>
             <a href="{WEBSITE}/posts"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">New post</button></a>
@@ -423,9 +423,9 @@ async def root(request: fastapi.Request):
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{WEBSITE}/resource?resource=dropdown.css">
+    <link rel="stylesheet" href="{WEBSITE}/resource/?resource=dropdown.css">
     <title>Massey Tips</title>
-    <link rel="icon" href="{WEBSITE}/resource?resource=favicon.ico" />
+    <link rel="icon" href="{WEBSITE}/resource/?resource=favicon.ico" />
 
 </head>
 <body style="background:#030303;">
@@ -437,7 +437,7 @@ async def root(request: fastapi.Request):
         background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;flex-direction:row;
         ">
-            <a href="{WEBSITE}/resource?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
+            <a href="{WEBSITE}/resource/?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
             </a>
             <a href="{WEBSITE}/posts"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">New post</button></a>
@@ -470,14 +470,14 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{WEBSITE}/resource?resource=dropdown.css">
+    <link rel="stylesheet" href="{WEBSITE}/resource/?resource=dropdown.css">
     <title>Massey Tips</title>
-    <link rel="icon" href="{WEBSITE}/resource?resource=favicon.ico" />
+    <link rel="icon" href="{WEBSITE}/resource/?resource=favicon.ico" />
 
     
 </head>
 <body style="background:#030303;">
-    <script src='{WEBSITE}/resource?resource=script.js'></script>
+    <script src='{WEBSITE}/resource/?resource=script.js'></script>
     <div style="background: #030303">
         <nav style="
         display:flex;
@@ -487,7 +487,7 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
         background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;flex-direction:row;
         ">
-            <a href="{WEBSITE}/resource?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
+            <a href="{WEBSITE}/resource/?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
             </a>
             <a href="{WEBSITE}/posts"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">New post</button></a>
@@ -581,13 +581,13 @@ async def post(request: fastapi.Request, post: str):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <title>Massey Tips</title>
-    <link rel="icon" href="{WEBSITE}/resource?resource=favicon.ico" />
+    <link rel="icon" href="{WEBSITE}/resource/?resource=favicon.ico" />
 
     
 </head>
 <body style="background:#030303;">
-    <link rel="stylesheet" href="{WEBSITE}/resource?resource=dropdown.css">
-    <script src='{WEBSITE}/resource?resource=script.js'></script>
+    <link rel="stylesheet" href="{WEBSITE}/resource/?resource=dropdown.css">
+    <script src='{WEBSITE}/resource/?resource=script.js'></script>
     <div style="background: #030303">
         <nav style="
         display:flex;
@@ -597,7 +597,7 @@ async def post(request: fastapi.Request, post: str):
         background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;flex-direction:row;
         ">
-            <a href="{WEBSITE}/resource?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
+            <a href="{WEBSITE}/resource/?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
             </a>
             <a href="{WEBSITE}/posts"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">New post</button></a>
@@ -624,9 +624,9 @@ async def moderate(request: fastapi.Request,):
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src='{WEBSITE}/resource?resource=script.js'></script>
+    <script src='{WEBSITE}/resource/?resource=script.js'></script>
     <title>Massey Tips</title>
-    <link rel="icon" href="{WEBSITE}/resource?resource=favicon.ico" />
+    <link rel="icon" href="{WEBSITE}/resource/?resource=favicon.ico" />
 
 </head>
 <body style="background:#030303;">
@@ -639,7 +639,7 @@ async def moderate(request: fastapi.Request,):
         background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;flex-direction:row;
         ">
-            <a href="{WEBSITE}/resource?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
+            <a href="{WEBSITE}/resource/?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
             </a>
             <a href="{WEBSITE}/posts"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">New post</button></a>
