@@ -14,7 +14,7 @@ import aiohttp
 import json
 import sys
 
-STORE_DIR = "/data/"
+STORE_DIR = "/app_data/"
 
 sys.path.append(__import__('os').getcwd())
 DATABASE = STORE_DIR+"database.sqlite3"
@@ -50,7 +50,7 @@ async def handler(data: dict | list | tuple, t: int, clean: bool=False):
                 try:
                     if not (await os.path.isfile(file)):file = glob.glob(f'./**/{file}', recursive=True)[0]
                     async with aiofiles.open(file) as f:code = await f.read()
-                    fg = ''.join(random.sample(string.ascii_letters+string.digits, k=LENGTH_OF_ID)) + '.py'
+                    fg = ''.join(random.sample(3*(string.ascii_letters+string.digits), k=LENGTH_OF_ID)) + '.py'
                     async with aiofiles.open(fg, 'w') as f:await f.write(code)
                     await os.remove(fg)
                     g = {i:v for i,v in globals().items()}
@@ -224,7 +224,7 @@ async def new_post(
 ) -> tuple[str, str, str, str, str | None, str, str | None, set[str], set[str]]:
     """Creates a new post with provided data, returns the row in the database as a tuple."""
     date = date.strftime("%Y-%m-%d") if isinstance(date, datetime.datetime) else date
-    id = "".join(random.sample(string.ascii_letters+string.digits, k=LENGTH_OF_ID))
+    id = "".join(random.sample(3*(string.ascii_letters+string.digits), k=LENGTH_OF_ID))
     try:
         upvotes = (ast.literal_eval(str(upvotes)))
         downvotes = (ast.literal_eval(str(downvotes)))
@@ -445,11 +445,14 @@ async def ban_author(id: str) -> str:
     return ip
 
 
+
 async def is_blacklisted(ip: str) -> bool:
     """Returns whether the IP in question is blacklisted or not."""
-    if not any(i[0] == ip for i in await get_ips()):
-        await add_ip(ip)
-    return bool((await get_ip(ip))[1])
+    try:
+        i = await get_ip(ip)
+    except Exception:
+        i = await add_ip(ip)
+    return bool(i[1])
 
 async def rep_post(
     id: str,
