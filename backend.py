@@ -27,7 +27,7 @@ x.update({i: '*' for i in ((string.punctuation+string.digits).replace(' ', ''))}
 table = str.maketrans(x)
 
 async def basic_check(s: str):
-    s = s.lower().replace('ing ', ' ').replace('s ', '').replace('ed ', '').translate(table)
+    s = s.lower().replace('ing ', ' ').replace('s ', ' ').replace('ed ', ' ').translate(table)
     for i in s.split():
         if i in SWEARS:
             return True
