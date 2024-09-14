@@ -80,7 +80,7 @@ async def make_post(
     rand = "".join(random.sample(string.ascii_letters+string.digits, k=LENGTH_OF_ID))
     if file is not None:
         filename = file[len(STORE_DIR):]
-    c: list[str] = await split(content) # type: ignore
+    c: tuple[str] = (" ".join(content.split()[:233]), ) if shortened else (content, )
     if pin is None:
         return f"""
     <div>
@@ -101,8 +101,8 @@ async def make_post(
                 <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↓</button>
                 <p style="font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
             </div>
-            <div style="margin-left:1.75%;margin-right:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed">
-                <p>{('</p><p>'.join(c[:5])) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
+            <div style="margin-left:1.75%;margin-right:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed;line-height:200%;">
+                <p>{('</p><p>'.join(c)) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if (len(content.split())>233) else (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
             </div>
         </div>
     </div>
@@ -130,9 +130,9 @@ async def make_post(
                     <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↓</button>
                     <p style="font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
                 </div>
-                <div style="margin-left:1.75%;margin-right:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed">
-                    <p>{('</p><p>'.join(c[:5])) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if len(c) > 5 else (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<br><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment:<br> <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
-                </div>
+            <div style="margin-left:1.75%;margin-right:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed;line-height:200%;">
+                <p>{('</p><p>'.join(c)) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if (len(content.split())>233) else (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
+            </div>
             </div>
         </div>
     </div>
