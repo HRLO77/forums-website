@@ -184,7 +184,7 @@ async def start(*args, **kwargs):
 async def evaluate_ip(request: fastapi.Request, call_next):
     ip = await get_client_ip(request)
     if await is_blacklisted(str(ip)):
-        return fastapi.responses.JSONResponse({"detail", "BLACKLISTED CLIENT ADDRESS"}, 403)
+        return fastapi.responses.JSONResponse({"detail": "BLACKLISTED CLIENT ADDRESS"}, 403)
     else:
         return await call_next(request)
 
