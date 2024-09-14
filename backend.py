@@ -22,8 +22,7 @@ WEBSITE = ""
 
 # WEBSITE = os.environ['DETA_SPACE_APP_HOSTNAME']
 
-SWEARS = {'sl*t', 'sh*t', 'f*ck', 'p*ss', 'd*mn', 'slvt', 'p*ss*', 'f*g', 'fag', 'r*t*rd', 'r*trd', 'tism', 't*sm', 'c*nt', 'cvnt', 'b*st*rd', 'b*tch', 'w*tch', 'b*th', 'f*ckr', 'f*ck*r', 'n*g', 'n*gga', '*gga', 'n*gg', 's*x', 'p*rn', 'prn', 'j*w', 'v*g', 'v*g*n', 'v*g*', 'c*c', 'd*c', 'p*n*s', 'r*d*n', 'r*dn', 't*t', 'b**b', 'g*n', 'n33r','n3gr', 'ngr', 'c*m', 'wh*r', 'wh*r*', 'n***r', 'n**r', 'n****r'} # credit for kaggle
-x = {'a': '*', 'e': '*', 'i': '*', 'o': '*', 'u': '*', 'y': '*'}
+SWEARS = {'sl*t', 'sh*t', 'f*ck', 'p*ss', 'd*mn', 'slvt', 'p*ss*', 'f*g', 'fag', 'r*t*rd', 'r*trd', 'tism', 't*sm', 'c*nt', 'cvnt', 'b*st*rd', 'b*tch', 'w*tch', 'b*th', 'f*ckr', 'f*ck*r', 'n*g', 'n*gga', '*gga', 'n*gg', 's*x', 'p*rn', 'prn', 'j*w', 'v*g', 'v*g*n', 'v*g*', 'c*c', 'd*c', 'p*n*s', 'r*d*n', 'r*dn', 't*t', 'b**b', 'g*n', 'n33r','n3gr', 'ngr', 'c*m', 'wh*r', 'wh*r*', 'n***r', 'n**r', 'n****r', 'n*gg*r', 'n*g*r', 'n*gl*t', 'n*grl*t', 'n*gr*', 'n*g*o', 'n*g*'}x = {'a': '*', 'e': '*', 'i': '*', 'o': '*', 'u': '*', 'y': '*'}
 x.update({i: '*' for i in ((string.punctuation+string.digits).replace(' ', ''))})
 table = str.maketrans(x)
 
