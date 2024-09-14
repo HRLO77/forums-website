@@ -1,4 +1,4 @@
-WEBSITE = "http://localhost:3500";
+WEBSITE = "";//
 // const WEBSITE = process.env.DETA_SPACE_APP_HOSTNAME
   
 function drop() {
