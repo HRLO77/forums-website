@@ -34,6 +34,26 @@ async def basic_check(s: str):
             return True
     return False
 
+def get_client_ip_blocking(request: fastapi.Request):
+    'returns the client api based on either proxy or host'
+    client_ip = request.headers.get('X-Forwarded-For')
+    
+    if client_ip:
+        client_ip = client_ip.split(",")[0].strip()
+    else:
+        client_ip = request.client.host
+    return client_ip
+
+async def get_client_ip(request: fastapi.Request):
+    'returns the client api based on either proxy or host'
+    client_ip = request.headers.get('X-Forwarded-For')
+    
+    if client_ip:
+        client_ip = client_ip.split(",")[0].strip()
+    else:
+        client_ip = request.client.host
+    return client_ip
+
 async def split(iter, size: int=600):
     
     special = {
@@ -138,8 +158,7 @@ async def make_post(
     </div>
     """
 
-
-limiter = slowapi.Limiter(key_func=util.get_remote_address)
+limiter = slowapi.Limiter(key_func=get_client_ip_blocking)#util.get_remote_address
 app = fastapi.FastAPI()
 app.state.limiter = limiter
 
@@ -164,7 +183,8 @@ async def start(*args, **kwargs):
 
 @app.middleware("http")
 async def evaluate_ip(request: fastapi.Request, call_next):
-    if await is_blacklisted(str(request.client.host)):
+    ip = await get_client_ip(request)
+    if await is_blacklisted(str(ip)):
         return fastapi.responses.JSONResponse({"detail", "BLACKLISTED CLIENT ADDRESS"}, 403)
     else:
         return await call_next(request)
@@ -173,28 +193,29 @@ async def evaluate_ip(request: fastapi.Request, call_next):
 @app.post("/upvote")
 @limiter.limit("5/minute")
 async def upvote(request: fastapi.Request, id: bytes = fastapi.Body()):
+    ip = await get_client_ip(request)
     try:
         id: str = json.loads(id.decode())["id"]
         post = await get_post(id)
         if (
-            str(request.client.host) in (post[-1])
-            and str(request.client.host) in post[-2]
+            str(ip) in (post[-1])
+            and str(ip) in post[-2]
         ):  # both
-            await remove_downvote(str(request.client.host), id)
-            await remove_upvote(str(request.client.host), id)
-        elif (str(request.client.host) in post[-1]) and not (
-            str(request.client.host) in post[-2]
+            await remove_downvote(str(ip), id)
+            await remove_upvote(str(ip), id)
+        elif (str(ip) in post[-1]) and not (
+            str(ip) in post[-2]
         ):  # 1 downvote no upvote
-            await add_upvote(str(request.client.host), id)
-            await remove_downvote(str(request.client.host), id)
-        elif not str(request.client.host) in post[-1] and (
-            str(request.client.host) in post[-2]
+            await add_upvote(str(ip), id)
+            await remove_downvote(str(ip), id)
+        elif not str(ip) in post[-1] and (
+            str(ip) in post[-2]
         ):  # no downvote and 1 upvote
-            await remove_upvote(str(request.client.host), id)
-        elif not (str(request.client.host) in post[-1]) and not (
-            str(request.client.host) in post[-2]
+            await remove_upvote(str(ip), id)
+        elif not (str(ip) in post[-1]) and not (
+            str(ip) in post[-2]
         ):  # no downvote and no upvote
-            await add_upvote(str(request.client.host), id)
+            await add_upvote(str(ip), id)
     except Exception as e:
         return fastapi.responses.JSONResponse({"detail": f"{e}"}, 500)
 
@@ -205,28 +226,29 @@ async def upvote(request: fastapi.Request, id: bytes = fastapi.Body()):
 @app.post("/downvote")
 @limiter.limit("5/minute")
 async def downvote(request: fastapi.Request, id: bytes = fastapi.Body()):
+    ip = await get_client_ip(request)
     try:
         id: str = json.loads(id.decode())["id"]
         post = await get_post(id)
-        if (str(request.client.host) in post[-1]) and str(request.client.host) in post[
+        if (str(ip) in post[-1]) and str(ip) in post[
             -2
         ]:  # both
-            await remove_downvote(str(request.client.host), id)
-            await remove_upvote(str(request.client.host), id)
+            await remove_downvote(str(ip), id)
+            await remove_upvote(str(ip), id)
         elif (
-            str(request.client.host) in post[-1]
-            and not str(request.client.host) in post[-2]
+            str(ip) in post[-1]
+            and not str(ip) in post[-2]
         ):  # downvote no upvote
-            await remove_downvote(str(request.client.host), id)
-        elif not (str(request.client.host) in post[-1]) and (
-            str(request.client.host) in post[-2]
+            await remove_downvote(str(ip), id)
+        elif not (str(ip) in post[-1]) and (
+            str(ip) in post[-2]
         ):  # no downvote and 1 upvote
-            await add_downvote(str(request.client.host), id)
-            await remove_upvote(str(request.client.host), id)
-        elif not (str(request.client.host) in post[-1]) and not (
-            str(request.client.host) in post[-2]
+            await add_downvote(str(ip), id)
+            await remove_upvote(str(ip), id)
+        elif not (str(ip) in post[-1]) and not (
+            str(ip) in post[-2]
         ):  # no downvote and no upvote
-            await add_downvote(str(request.client.host), id)
+            await add_downvote(str(ip), id)
     except Exception as e:
         return fastapi.responses.JSONResponse({"detail": f"{e}"}, 500)
 
@@ -329,6 +351,7 @@ async def form(
     content: str = fastapi.Form(),
     file: Optional[fastapi.UploadFile] = fastapi.File(None),
 ):
+    ip = await get_client_ip(request)
     if (await is_inject(title)) or (await is_inject(content)):
         return fastapi.responses.JSONResponse({"detail":"SQL INJECT DETECTED"}, 403)
     id: str = ""
@@ -401,14 +424,14 @@ async def form(
     )
     if file is None:
         returned = await new_post(
-            title, content, datetime.datetime.now(datetime.UTC), str(request.client.host), pin=(SORT_PIN if pin==sys.argv[-1] else None)
+            title, content, datetime.datetime.now(datetime.UTC), str(ip), pin=(SORT_PIN if pin==sys.argv[-1] else None)
         )
     else:
         returned = await new_post(
             title,
             content,
             datetime.datetime.now(datetime.UTC),
-            str(request.client.host),
+            str(ip),
             f"{STORE_DIR}{id}_{file.filename}", pin=(SORT_PIN if pin==sys.argv[-1] else None)
         )
 
@@ -560,7 +583,6 @@ async def fetch_resource(request: fastapi.Request, resource: str):
         if '/' in resource.strip() or '\\' in resource.strip() or DATABASE in resource.strip() or INJECT in resource.strip() or BACKUP in resource.strip():
             return fastapi.responses.JSONResponse({"detail": "ACCESS DENIED"}, 403)
     
-    print(resource, await os.path.isfile(resource))
     async def stream(file: str):
         async with aiofiles.open(file, 'rb') as rb:
             contents = await rb.read()
