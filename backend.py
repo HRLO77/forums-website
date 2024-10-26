@@ -560,7 +560,7 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
 @app.get("/resource")
 @limiter.limit('20/minute')
 async def fetch_resource(request: fastapi.Request, resource: str):
-    if resource.strip() in {DATABASE, INJECT, BACKUP}:
+    if resource.strip().replace('\\', '').replace('.', '').replace('/', '') in {DATABASE, INJECT, BACKUP}:
         return fastapi.responses.JSONResponse({"detail": "ACCESS DENIED"}, 403)
     
     match = re.match(f'^{STORE_DIR}([a-zA-Z0-9]{{{LENGTH_OF_ID}}})_', resource)
