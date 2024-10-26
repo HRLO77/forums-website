@@ -10,6 +10,7 @@ import string
 import json
 import random
 import gzip
+import os as real_os
 from aiofiles import os
 import tracemalloc
 import subprocess
@@ -22,13 +23,13 @@ WEBSITE = ""
 
 # WEBSITE = os.environ['DETA_SPACE_APP_HOSTNAME']
 
-SWEARS = {'sl*t', 'sh*t', 'f*ck', 'p*ss', 'd*mn', 'slvt', 'p*ss*', 'f*g', 'fag', 'r*t*rd', 'r*trd', 'tism', 't*sm', 'c*nt', 'cvnt', 'b*st*rd', 'b*tch', 'w*tch', 'b*th', 'f*ckr', 'f*ck*r', 'n*g', 'n*gga', '*gga', 'n*gg', 's*x', 'p*rn', 'prn', 'j*w', 'v*g', 'v*g*n', 'v*g*', 'c*c', 'd*c', 'p*n*s', 'r*d*n', 'r*dn', 't*t', 'b**b', 'g*n', 'n33r','n3gr', 'ngr', 'c*m', 'wh*r', 'wh*r*', 'n***r', 'n**r', 'n****r', 'n*gg*r', 'n*g*r', 'n*gl*t', 'n*grl*t', 'n*gr*', 'n*g*o', 'n*g*', 'r*p', 'r*p*st', 'sm*t', 'smvt'} # credit for kaggle
-x = {'a': '*', 'e': '*', 'i': '*', 'o': '*', 'u': '*', 'y': '*'}
-x.update({i: '*' for i in ((string.punctuation+string.digits).replace(' ', ''))})
+SWEARS = {'slut', 'sh*t', 'shit', 'f*ck', 'p*ss', 'slvt', 'p*ss*', 'pussy', 'f*g', 'fag', 'r*t*rd', 'retard', 'r*trd', 'retrd','tism', 't*sm', 'cunt', 'c*nt','cvnt', 'b*st*rd', 'bastard','b*tch', 'bitch', 'f*ckr', 'fuckr','f*ck*r', "fucker", 'n*g', 'nig', 'n*gga', 'nigga', '*gga', 'igga', 'n*gg', "nigg",'p*rn', 'porn' ,'prn', 'j*w', 'jew', 'c*c', 'coc', 'd*c', 'dic','p*n*s', 'penis','r*d*n', 'ridin', 'ridn','r*dn', 'tit','t*t', 'boob','b**b', 'gun', 'gvn','g*n', 'n33r','n3gr', 'ngr', 'cum','c*m', 'whor','wh*r', 'whore','wh*r*', 'niggr','n***r', 'n**r', 'nigr', 'n****r', 'nigger', 'n*gg*r', 'niger','n*g*r', 'niglet','n*gl*t', 'nigrlet','n*grl*t', 'nigerlet','n*g*l*t', 'negro','n*gr*','n*g*o', 'nego','n*g*', 'rape','r*p*', 'rapist', 'r*p*st', 'smut','sm*t', 'smvt', 'nigge','n*gg*', 'chigga', 'chiga', 'ch*gg*', 'ch*g*'} # credit for kaggle
+# x = {'a': '*', 'e': '*', 'i': '*', 'o': '*', 'u': '*', 'y': '*'}
+x = ({i: '*' for i in ((string.punctuation+string.digits).replace(' ', ''))})
 table = str.maketrans(x)
 
 async def basic_check(s: str):
-    s = s.lower().replace('ing ', ' ').replace('s ', ' ').replace('ed ', ' ').translate(table)
+    s = f'{s} '.lower().replace('es ',' ').replace('sing ', ' ').replace('ting ', ' ').replace('ing ', ' ').replace('s ', ' ').replace('ed ', ' ').translate(table)
     for i in s.split():
         if i in SWEARS:
             return True
@@ -42,7 +43,7 @@ def get_client_ip_blocking(request: fastapi.Request):
         client_ip = client_ip.split(",")[0].strip()
     else:
         client_ip = request.client.host
-    return client_ip
+    return str(client_ip)
 
 async def get_client_ip(request: fastapi.Request):
     'returns the client api based on either proxy or host'
@@ -52,7 +53,7 @@ async def get_client_ip(request: fastapi.Request):
         client_ip = client_ip.split(",")[0].strip()
     else:
         client_ip = request.client.host
-    return client_ip
+    return str(client_ip)
 
 async def split(iter, size: int=600):
     
@@ -112,17 +113,17 @@ async def make_post(
         border-style:solid;
         color:white;
         border-color:rgba(95, 158, 160, 0.46);">
-            <script src='{WEBSITE}/resource/?resource=script.js'></script>
+            <script src='{WEBSITE}/resource?resource=script.js'></script>
             <div>
-                <img src="{WEBSITE}/resource/?resource=user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
+                <img src="{WEBSITE}/resource?resource=user.jpeg" style="height: 39px;width:39px;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
                 <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title}</p>
                 <p style="margin-left: 1.4%;font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
-                <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↑</button>
-                <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↓</button>
+                <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%;cursor: pointer;" onclick="upvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↑</button>
+                <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%;cursor: pointer;" onclick="downvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↓</button>
                 <p style="font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
             </div>
             <div style="margin-left:1.75%;margin-right:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed;line-height:200%;">
-                <p>{('</p><p>'.join(c)) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if (len(content.split())>233) else (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
+                <p>{('</p><p>'.join(c)) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if (len(content.split())>233) else (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
             </div>
         </div>
     </div>
@@ -141,17 +142,17 @@ async def make_post(
             border-style:solid;
             color:white;
             border-color:rgba(95, 158, 160, 0.46);">
-                <script src='{WEBSITE}/resource/?resource=script.js'></script>
+                <script src='{WEBSITE}/resource?resource=script.js'></script>
                 <div>
-                    <img src="{WEBSITE}/resource/?resource=user.jpeg" style="height: 2.05%;width:2.05%;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
+                    <img src="{WEBSITE}/resource?resource=user.jpeg" style="height: 39px;width:39px;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
                     <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title}</p>
                     <p style="margin-left: 1.4%;font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
-                    <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="upvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↑</button>
-                    <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%" onclick="downvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↓</button>
+                    <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%;cursor: pointer;" onclick="upvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↑</button>
+                    <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%;cursor: pointer;" onclick="downvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↓</button>
                     <p style="font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
                 </div>
             <div style="margin-left:1.75%;margin-right:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed;line-height:200%;">
-                <p>{('</p><p>'.join(c)) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if (len(content.split())>233) else (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource/?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
+                <p>{('</p><p>'.join(c)) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if (len(content.split())>233) else (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
             </div>
             </div>
         </div>
@@ -184,38 +185,31 @@ async def start(*args, **kwargs):
 @app.middleware("http")
 async def evaluate_ip(request: fastapi.Request, call_next):
     ip = await get_client_ip(request)
-    if await is_blacklisted(str(ip)):
+    if await is_blacklisted(ip):
         return fastapi.responses.JSONResponse({"detail": "BLACKLISTED CLIENT ADDRESS"}, 403)
     else:
         return await call_next(request)
 
 
 @app.post("/upvote")
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 async def upvote(request: fastapi.Request, id: bytes = fastapi.Body()):
     ip = await get_client_ip(request)
     try:
         id: str = json.loads(id.decode())["id"]
         post = await get_post(id)
         if (
-            str(ip) in (post[-1])
-            and str(ip) in post[-2]
+            ip in (post[-1])
+            and ip in post[-2]
         ):  # both
-            await remove_downvote(str(ip), id)
-            await remove_upvote(str(ip), id)
-        elif (str(ip) in post[-1]) and not (
-            str(ip) in post[-2]
-        ):  # 1 downvote no upvote
-            await add_upvote(str(ip), id)
-            await remove_downvote(str(ip), id)
-        elif not str(ip) in post[-1] and (
-            str(ip) in post[-2]
-        ):  # no downvote and 1 upvote
-            await remove_upvote(str(ip), id)
-        elif not (str(ip) in post[-1]) and not (
-            str(ip) in post[-2]
-        ):  # no downvote and no upvote
-            await add_upvote(str(ip), id)
+            await remove_downvote(ip, id)
+            await remove_upvote(ip, id)
+        elif (ip in post[-1]):  # 1 downvote no upvote
+            await remove_downvote(ip, id) # remove the downvote
+        elif ip in post[-2]:  # no downvote and 1 upvote
+            await remove_upvote(ip, id)
+        else:  # no downvote and no upvote
+            await add_upvote(ip, id)
     except Exception as e:
         return fastapi.responses.JSONResponse({"detail": f"{e}"}, 500)
 
@@ -224,31 +218,21 @@ async def upvote(request: fastapi.Request, id: bytes = fastapi.Body()):
 # async def 
 
 @app.post("/downvote")
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 async def downvote(request: fastapi.Request, id: bytes = fastapi.Body()):
     ip = await get_client_ip(request)
     try:
         id: str = json.loads(id.decode())["id"]
         post = await get_post(id)
-        if (str(ip) in post[-1]) and str(ip) in post[
-            -2
-        ]:  # both
-            await remove_downvote(str(ip), id)
-            await remove_upvote(str(ip), id)
-        elif (
-            str(ip) in post[-1]
-            and not str(ip) in post[-2]
-        ):  # downvote no upvote
-            await remove_downvote(str(ip), id)
-        elif not (str(ip) in post[-1]) and (
-            str(ip) in post[-2]
-        ):  # no downvote and 1 upvote
-            await add_downvote(str(ip), id)
-            await remove_upvote(str(ip), id)
-        elif not (str(ip) in post[-1]) and not (
-            str(ip) in post[-2]
-        ):  # no downvote and no upvote
-            await add_downvote(str(ip), id)
+        if (ip in post[-1]) and ip in post[-2]:  # both
+            await remove_downvote(ip, id)
+            await remove_upvote(ip, id)
+        elif (ip in post[-1]):  # downvote no upvote
+            await remove_downvote(ip, id)
+        elif ip in post[-2]:  # no downvote and 1 upvote
+            await remove_upvote(ip, id)
+        else:  # no downvote and no upvote
+            await add_downvote(ip, id)
     except Exception as e:
         return fastapi.responses.JSONResponse({"detail": f"{e}"}, 500)
 
@@ -270,9 +254,9 @@ async def new(request: fastapi.Request):
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src='{WEBSITE}/resource/?resource=script.js'></script>
+    <script src='{WEBSITE}/resource?resource=script.js'></script>
     <title>Massey Tips</title>
-    <link rel="icon" href="{WEBSITE}/resource/?resource=favicon.ico" />
+    <link rel="icon" href="{WEBSITE}/resource?resource=favicon.ico" />
 
     <style>
     #progressWrapper {{
@@ -302,7 +286,7 @@ async def new(request: fastapi.Request):
         background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;flex-direction:row;
         ">
-            <a href="{WEBSITE}/resource/?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
+            <a href="{WEBSITE}/resource?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
             </a>
             <a href="{WEBSITE}/posts"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">New post</button></a>
@@ -315,13 +299,13 @@ async def new(request: fastapi.Request):
         <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:50%;width:100%;display:flexbox;"><input type="text" id="content" name="content" style="height:30px;width:90%;font-size:medium"><br><br></div>
         <div style="margin-left: 23%;margin-top:2.60416667%;color:white;border-radius:10px;font-size:large;"><label for="file">File:</label></div>
         <div style="margin-left: 21.5%;margin-top:2.60416667%;color:white;border-radius:10px">
-            <input type="file" id="file" name="file" style="font-size:medium;"><br><br>
+            <input type="file" id="file" name="file" style="font-size:medium;cursor: pointer;"><br><br>
             <div id="progressWrapper" style="margin-left:-5.75%">
                 <div id="progressBar"></div>
             </div>
         </div>
         <div style="margin-left: 22.2%;margin-top:2.60416667%;color:white;border-radius:10px">
-            <button type="button" onclick="submitForm()" style="font-size: large;">Submit</button>
+            <button type="button" onclick="submitForm()" style="font-size: large;cursor: pointer;">Submit</button>
         </div>
     </form>
 </body>
@@ -404,34 +388,34 @@ async def form(
         return fastapi.responses.JSONResponse({"detail":"CONTENT TOO LARGE"}, 413)
     title = "".join(
         i
-        for i in title.replace("<", "&lt;")
+        for i in title.replace('&', '&amp;')
+        .replace("<", "&lt;")
         .replace(">", "&gt;")
         .replace("'", "&#39;")
         .replace('"', "&quot;")
-        .replace('&', '&amp;')
         .replace('-', '&ndash;')
         if i.isprintable()
     )
     content = "".join(
         i
-        for i in content.replace("<", "&lt;")
+        for i in content.replace('&', '&amp;')
+        .replace("<", "&lt;")
         .replace(">", "&gt;")
         .replace("'", "&#39;")
         .replace('"', "&quot;")
-        .replace('&', '&amp;')
         .replace('-', '&ndash;')
         if i.isprintable()
     )
     if file is None:
         returned = await new_post(
-            title, content, datetime.datetime.now(datetime.UTC), str(ip), pin=(SORT_PIN if pin==sys.argv[-1] else None)
+            title, content, datetime.datetime.now(datetime.UTC), ip, pin=(SORT_PIN if pin==sys.argv[-1] else None)
         )
     else:
         returned = await new_post(
             title,
             content,
             datetime.datetime.now(datetime.UTC),
-            str(ip),
+            ip,
             f"{STORE_DIR}{id}_{file.filename}", pin=(SORT_PIN if pin==sys.argv[-1] else None)
         )
 
@@ -446,9 +430,9 @@ async def root(request: fastapi.Request):
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{WEBSITE}/resource/?resource=dropdown.css">
+    <link rel="stylesheet" href="{WEBSITE}/resource?resource=dropdown.css">
     <title>Massey Tips</title>
-    <link rel="icon" href="{WEBSITE}/resource/?resource=favicon.ico" />
+    <link rel="icon" href="{WEBSITE}/resource?resource=favicon.ico" />
 
 </head>
 <body style="background:#030303;">
@@ -460,7 +444,7 @@ async def root(request: fastapi.Request):
         background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;flex-direction:row;
         ">
-            <a href="{WEBSITE}/resource/?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
+            <a href="{WEBSITE}/resource?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
             </a>
             <a href="{WEBSITE}/posts"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">New post</button></a>
@@ -493,14 +477,14 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{WEBSITE}/resource/?resource=dropdown.css">
+    <link rel="stylesheet" href="{WEBSITE}/resource?resource=dropdown.css">
     <title>Massey Tips</title>
-    <link rel="icon" href="{WEBSITE}/resource/?resource=favicon.ico" />
+    <link rel="icon" href="{WEBSITE}/resource?resource=favicon.ico" />
 
     
 </head>
 <body style="background:#030303;">
-    <script src='{WEBSITE}/resource/?resource=script.js'></script>
+    <script src='{WEBSITE}/resource?resource=script.js'></script>
     <div style="background: #030303">
         <nav style="
         display:flex;
@@ -510,7 +494,7 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
         background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;flex-direction:row;
         ">
-            <a href="{WEBSITE}/resource/?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
+            <a href="{WEBSITE}/resource?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
             </a>
             <a href="{WEBSITE}/posts"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">New post</button></a>
@@ -549,12 +533,13 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
         ps, pins = sorted(ps, key=lambda post: len(post[-2]) - len(post[-1]), reverse=True), sorted(pins, key=lambda post: len(post[-2]) - len(post[-1]), reverse=True)
     elif sortby == 'length':
         ps, pins = sorted(ps, key=lambda post: len(post[2]), reverse=True), sorted(pins, key=lambda post: len(post[2]), reverse=True)
-    elif sortby == 'file':
-        ps, pins = sorted(ps, key=lambda post: (post[4]!=None, datepost(post)), reverse=True), sorted(pins, key=(lambda post: (post[4]!=None, datepost(post))), reverse=True)
+    elif sortby == 'file':#                                    datepost(post) 
+       # ps, pins = sorted(ps, key=lambda post: (post[4]!=None, ), reverse=True), sorted(pins, key=(lambda post: (post[4]!=None, datepost(post))), reverse=True)
+       ps, pins = (sorted(ps, key=lambda post: (post[4] is None,))), (sorted(pins, key=(lambda post:(post[4] is None,)))) # should be faster w/ same results
     elif sortby == 'oldest':
-        ps, pins = [*reversed(ps)], [*reversed(pins)]
-    elif sortby == 'file_oldest':
-       ps, pins = [*reversed(sorted(ps, key=lambda post: (datepost(post), post[4]!=None),))], [*sorted(sorted(pins, key=(lambda post: (datepost(post), post[4]!=None)),))]
+        ps, pins = (ps)[::-1], (pins)[::-1]
+    elif sortby == 'file_oldest':#                                datepost(post)
+       ps, pins = (sorted(ps, key=lambda post: (post[4] is None,), reverse=True))[::-1], (sorted(pins, key=(lambda post:(post[4] is None,)), reverse=True))[::-1]
     ps = ps[t*pgn:t*pgn+t]
     del t
 
@@ -563,8 +548,8 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     page += f"""
     <br><br><br><br>
         <div style="flex-direction:row;justify-content:space-evenly;align-items:center;display:flex;">
-            <a href="https://massey-tips.fly.dev/posts?sortby=latest&pgn=-1"><button style="color:white;font-size:xx-large;border-color:cadetblue;background-color:#030303;border-radius:15%">&lt;</button></a>
-            <a href="https://massey-tips.fly.dev/posts?sortby=latest&pgn=1"><button style="color:white;font-size:xx-large;border-color:cadetblue;background-color:#030303;border-radius:15%">&gt;</button></a>
+            <a href="https://massey-tips.fly.dev/posts?sortby=latest&pgn={pgn-1}"><button style="color:white;font-size:xx-large;border-color:cadetblue;background-color:#030303;border-radius:15%">&lt;</button></a>
+            <a href="https://massey-tips.fly.dev/posts?sortby=latest&pgn={pgn+1}"><button style="color:white;font-size:xx-large;border-color:cadetblue;background-color:#030303;border-radius:15%">&gt;</button></a>
         </div>
 </body>
 </body>
@@ -572,7 +557,7 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     return fastapi.responses.HTMLResponse(page)
 
 
-@app.get("/resource/")
+@app.get("/resource")
 @limiter.limit('20/minute')
 async def fetch_resource(request: fastapi.Request, resource: str):
     if resource.strip() in {DATABASE, INJECT, BACKUP}:
@@ -582,14 +567,36 @@ async def fetch_resource(request: fastapi.Request, resource: str):
     if match is None:
         if '/' in resource.strip() or '\\' in resource.strip() or DATABASE in resource.strip() or INJECT in resource.strip() or BACKUP in resource.strip():
             return fastapi.responses.JSONResponse({"detail": "ACCESS DENIED"}, 403)
+
+    async def basename(file: str):
+        return await asyncio.to_thread(real_os.path.basename, resource)
+    name = await basename(resource)
     
+    # return fastapi.responses.FileResponse(path=resource, media_type="application/octet-stream", filename=(name if match is None else name[6:]))
     async def stream(file: str):
+        print(file)
         async with aiofiles.open(file, 'rb') as rb:
+            if not (rb.readable()):
+                raise ValueError("UNABLE TO READ RESOURCE")
             contents = await rb.read()
-            try:contents = await asyncio.to_thread(gzip.decompress, contents)
-            except Exception:pass
+            if file=='user.jpeg' or file=='script.js' or file=='dropdown.css': # commonly loaded
+                pass
+            else:
+                try:contents = await asyncio.to_thread(gzip.decompress, contents)
+                except Exception:pass
             yield contents
-    return fastapi.responses.StreamingResponse(stream(resource))
+    inline = {'mp4', 'mp3', 'wav', 'ogg', 'mov', 'png', 'jpg', 'tiff', 'pdf', 'jpeg', 'gif', 'doc', 'docx', 'webm', 'mpeg', 'html', 'css', 'py', 'js', 'java', 'c++', 'c', 'cpp', 'swift', 'rs', 'txt', 'csv', 'xml', 'json', 'ts', 'webp'}
+    #{'Content-Disposition': f'attachment; filename="{name if match is None else name[6:]}'}
+    try:
+        if STORE_DIR in resource:
+            if name.split('.')[-1] in inline:
+                return fastapi.responses.StreamingResponse(stream(resource), headers={'Content-Disposition': f'inline; filename="{name if match is None else name[6:]}'})
+            return fastapi.responses.StreamingResponse(stream(resource), headers={'Content-Disposition': f'attachment; filename="{name if match is None else name[6:]}'})
+        else:
+            return fastapi.responses.StreamingResponse(stream(resource),)
+    except Exception as e:
+        return fastapi.responses.JSONResponse({'detail': str(e)}, 500)
+        
 
 
 @app.get("/post/{post}")
@@ -603,13 +610,13 @@ async def post(request: fastapi.Request, post: str):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <title>Massey Tips</title>
-    <link rel="icon" href="{WEBSITE}/resource/?resource=favicon.ico" />
+    <link rel="icon" href="{WEBSITE}/resource?resource=favicon.ico" />
 
     
 </head>
 <body style="background:#030303;">
-    <link rel="stylesheet" href="{WEBSITE}/resource/?resource=dropdown.css">
-    <script src='{WEBSITE}/resource/?resource=script.js'></script>
+    <link rel="stylesheet" href="{WEBSITE}/resource?resource=dropdown.css">
+    <script src='{WEBSITE}/resource?resource=script.js'></script>
     <div style="background: #030303">
         <nav style="
         display:flex;
@@ -619,7 +626,7 @@ async def post(request: fastapi.Request, post: str):
         background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;flex-direction:row;
         ">
-            <a href="{WEBSITE}/resource/?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
+            <a href="{WEBSITE}/resource?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
             </a>
             <a href="{WEBSITE}/posts"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">New post</button></a>
@@ -646,9 +653,9 @@ async def moderate(request: fastapi.Request,):
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src='{WEBSITE}/resource/?resource=script.js'></script>
+    <script src='{WEBSITE}/resource?resource=script.js'></script>
     <title>Massey Tips</title>
-    <link rel="icon" href="{WEBSITE}/resource/?resource=favicon.ico" />
+    <link rel="icon" href="{WEBSITE}/resource?resource=favicon.ico" />
 
 </head>
 <body style="background:#030303;">
@@ -661,7 +668,7 @@ async def moderate(request: fastapi.Request,):
         background-color:rgba(95, 158, 160, 0.46);
         font-family: 'Montserrat', sans-serif;text-rendering:optimizeSpeed;flex-direction:row;
         ">
-            <a href="{WEBSITE}/resource/?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
+            <a href="{WEBSITE}/resource?resource=Privacy_policy.txt"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">Policy</button>
             </a>
             <a href="{WEBSITE}/posts"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">All posts</button></a>
             <a href="{WEBSITE}/new"><button style="cursor: pointer; color: black; font-size: larger; border-radius: 5px; background-color: rgba(74, 142, 182, 0.485); height: 50px; width: 100px;">New post</button></a>
@@ -673,7 +680,7 @@ async def moderate(request: fastapi.Request,):
         <div style="margin-left: 24%;margin-top:2.60416667%;color:white;border-radius:10px;font-size:large;display:flexbox;"><label for="code">Code: </label></div>
         <div style="margin-left: 6.5%;margin-top:2.60416667%;color:white;border-radius:10px;height:50%;width:100%;display:flexbox;"><input type="text" id="code" name="code" style="height:30px;width:90%;font-size:medium"><br><br></div>
         <div style="margin-left: 23%;margin-top:2.60416667%;color:white;border-radius:10px">
-            <button type="button" onclick="moderate()" style="font-size: large;">Moderate</button>
+            <button type="button" onclick="moderate()" style="font-size: large;cursor: pointer;">Moderate</button>
         </div>
     </form>
     <p style='color:white;margin-left:7.35%;font-size:large'>async def main():\\n  print(await delete_post("",))\\nasyncio.run(main())</p>
