@@ -121,7 +121,7 @@ async def get_posts() -> tuple[str, str, str, str, str | None, str, str | None, 
 
 
 async def get_post(id: str) -> tuple[str, str, str, str, str | None, str, str | None, set[str], set[str]]:
-    """Returns tuple[str, str, str]. Representing a id, title, content, date, IP, file path, pin, upvotes, and downvotes."""
+    """Returns tuple[str, str, str]. Representing a id, title, content, date, file path, IP, pin, upvotes, and downvotes."""
     res = await cursor.execute("SELECT * FROM posts WHERE id=?", [id])
     res = await res.fetchone()
     return (*((res)[0:7]), ast.literal_eval(res[-2]), ast.literal_eval(res[-1]))
@@ -417,7 +417,7 @@ async def remove_downvote(ip: str, id: str):
         downvotes.remove(ip)
     except Exception:
         pass
-    d = await rep_post(ip, downvotes=downvotes, post=post)
+    d = await rep_post(id, downvotes=downvotes, post=post)
     await handler(d, 1, True)
     return d
 
