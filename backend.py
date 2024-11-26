@@ -19,11 +19,11 @@ from typing import Optional
 
 SORT_PIN = '&#128392; Pinned'
 WEBSITE = ""
-
+MAX_CON_LEN = 190
 
 # WEBSITE = os.environ['DETA_SPACE_APP_HOSTNAME']
 
-SWEARS = {'slut', 'sh*t', 'shit', 'f*ck', 'p*ss', 'slvt', 'p*ss*', 'pussy', 'f*g', 'fag', 'r*t*rd', 'retard', 'r*trd', 'retrd','tism', 't*sm', 'cunt', 'c*nt','cvnt', 'b*st*rd', 'bastard','b*tch', 'bitch', 'f*ckr', 'fuckr','f*ck*r', "fucker", 'n*g', 'nig', 'n*gga', 'nigga', '*gga', 'igga', 'n*gg', "nigg",'p*rn', 'porn' ,'prn', 'j*w', 'jew', 'c*c', 'coc', 'd*c', 'dic','p*n*s', 'penis','r*d*n', 'ridin', 'ridn','r*dn', 'tit','t*t', 'boob','b**b', 'gun', 'gvn','g*n', 'n33r','n3gr', 'ngr', 'cum','c*m', 'whor','wh*r', 'whore','wh*r*', 'niggr','n***r', 'n**r', 'nigr', 'n****r', 'nigger', 'n*gg*r', 'niger','n*g*r', 'niglet','n*gl*t', 'nigrlet','n*grl*t', 'nigerlet','n*g*l*t', 'negro','n*gr*','n*g*o', 'nego','n*g*', 'rape','r*p*', 'rapist', 'r*p*st', 'smut','sm*t', 'smvt', 'nigge','n*gg*', 'chigga', 'chiga', 'ch*gg*', 'ch*g*'} # credit for kaggle
+SWEARS = {'slut', 'sh*t', 'shit', 'fuck','f*ck', 'p*ss', 'slvt', 'p*ss*', 'pussy', 'f*g', 'fag', 'r*t*rd', 'retard', 'r*trd', 'retrd','tism', 't*sm', 'cunt', 'c*nt','cvnt', 'b*st*rd', 'bastard','b*tch', 'bitch', 'f*ckr', 'fuckr','f*ck*r', "fucker", 'n*g', 'nig', 'n*gga', 'nigga', '*gga', 'igga', 'n*gg', "nigg",'p*rn', 'porn' ,'prn', 'j*w', 'jew', 'c*c', 'coc', 'd*c', 'dic','p*n*s', 'penis','r*d*n', 'ridin', 'ridn','r*dn', 'tit','t*t', 'boob','b**b', 'n33r','n3gr', 'ngr', 'cum','c*m', 'whor','wh*r', 'whore','wh*r*', 'niggr','n***r', 'n**r', 'nigr', 'n****r', 'nigger', 'n*gg*r', 'niger','n*g*r', 'niglet','n*gl*t', 'nigrlet','n*grl*t', 'nigerlet','n*g*l*t', 'negro','n*gr*','n*g*o', 'nego','n*g*', 'rape','r*p*', 'rapist', 'r*p*st', 'smut','sm*t', 'smvt', 'nigge','n*gg*', 'chigga', 'chiga', 'ch*gg*', 'ch*g*'} # credit for kaggle
 # x = {'a': '*', 'e': '*', 'i': '*', 'o': '*', 'u': '*', 'y': '*'}
 x = ({i: '*' for i in ((string.punctuation+string.digits).replace(' ', ''))})
 table = str.maketrans(x)
@@ -101,7 +101,7 @@ async def make_post(
     rand = "".join(random.sample(3*(string.ascii_letters+string.digits), k=LENGTH_OF_ID))
     if file is not None:
         filename = file[len(STORE_DIR):]
-    c: tuple[str] = (" ".join(content.split()[:233]), ) if shortened else (content, )
+    c: tuple[str] = (" ".join(content.split()[:MAX_CON_LEN]), ) if shortened else (content, )
     if pin is None:
         return f"""
     <div>
@@ -123,7 +123,7 @@ async def make_post(
                 <p style="font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
             </div>
             <div style="margin-left:1.75%;margin-right:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed;line-height:200%;">
-                <p>{('</p><p>'.join(c)) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if (len(content.split())>233) else (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
+                <p>{('</p><p>'.join(c)) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if (len(content.split())>MAX_CON_LEN) else (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
             </div>
         </div>
     </div>
@@ -152,7 +152,7 @@ async def make_post(
                     <p style="font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;display:inline-block;vertical-align:top;margin-left:0.7%" id="{rand}">{len(upvotes)-len(downvotes)} points</p>
                 </div>
             <div style="margin-left:1.75%;margin-right:1.75%;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;text-rendering:optimizeSpeed;line-height:200%;">
-                <p>{('</p><p>'.join(c)) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if (len(content.split())>233) else (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
+                <p>{('</p><p>'.join(c)) + '</p>' + (lambda: f'<p><a href="{WEBSITE}/post/{id}" style="text-decoration:none;font-size:medium;font-family:sans-serif;text-rendering:optimizeSpeed;color:cadetblue">Read more...</a></p>' if (len(content.split())>MAX_CON_LEN) else (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')())() if shortened else '</p><p>'.join(c) + '</p>' + (lambda: f'<hr><p style="font-family:sans-serif;text-rendering:optimizeSpeed">Attachment: <a href="{WEBSITE}/resource?resource={file}">{filename[LENGTH_OF_ID+1:]}</a></p>' if file is not None else '')()}
             </div>
             </div>
         </div>
@@ -244,7 +244,7 @@ async def raw(request: fastapi.Request):
     return fastapi.responses.JSONResponse({i[0]: [*i[1:5], *i[6:-2], len(i[-2])-len(i[-1])] for i in posts})
 
 @app.get("/new")
-@limiter.limit("20/minute")
+@limiter.limit("30/minute")
 async def new(request: fastapi.Request):
     return fastapi.responses.HTMLResponse(
         f"""
@@ -316,7 +316,7 @@ async def new(request: fastapi.Request):
 
 
 @app.get("/points")
-@limiter.limit("20/minute")
+@limiter.limit("30/minute")
 async def points(request: fastapi.Request, post_id: str):
     try:
         p = await get_post(post_id)
@@ -345,7 +345,10 @@ async def form(
         return fastapi.responses.JSONResponse({"detail":"INAPPROPRIATE MATERIAL DETECTED"}, 422)
     title = title.replace('   ', '').replace('  ', ' ')  # remove extra white spaces
     content = content.replace('   ', '').replace('  ', ' ')
+    safe_name = ''
     if not(file is None):
+        chars = {*(string.ascii_letters+string.digits)}
+        safe_name = ''.join([i if i in chars else '_' for i in file.filename])[:64]
         contents = await file.read()
         async def is_too_big(b: bytes, name):
             '''Checks if a file is more than 5 MiB in size after gzip compression, and is a valid file.'''
@@ -370,21 +373,21 @@ async def form(
                 return True, size
         try:contents=await asyncio.to_thread(gzip.compress, contents)
         except Exception:pass
-        res = await is_too_big(contents, file.filename)
+        res = await is_too_big(contents, safe_name)
         if (res[0]):
             return fastapi.responses.JSONResponse({"detail": f"FILE MUST BE UNDER 5 MiB AFTER COMPRESSION, FILE WAS {res[1]//1049000}.{res[1]%1049000} MiB"}, 413)
         else:
             id = "".join(random.sample(3*(string.ascii_letters+string.digits), k=LENGTH_OF_ID))
             # while True:
-            #     if await os.path.isfile(f"{id}_{file.filename}"):
+            #     if await os.path.isfile(f"{id}_{safe_name}"):
             #         id = "".join(random.sample(3*(string.ascii_letters+string.digits), k=LENGTH_OF_ID))
             #     else:
             #         break
-            if len(await split(f"{id}_{file.filename}")) > 1:return fastapi.responses.JSONResponse({"detail": "FILENAME TOO LARGE"}, 413)
-            await os_copy(file.filename, f"{STORE_DIR}{id}_{file.filename}")
+            if len(await split(f"{id}_{safe_name}")) > 1:return fastapi.responses.JSONResponse({"detail": "FILENAME TOO LARGE"}, 413)
+            await os_copy(safe_name, f"{STORE_DIR}{id}_{safe_name}")
     if len(await split(title, 300)) > 1:
         return fastapi.responses.JSONResponse({"detail":"TITLE TOO LARGE"}, 413)
-    if len(await split(content)) > 15:
+    if len(await split(content)) > 20:
         return fastapi.responses.JSONResponse({"detail":"CONTENT TOO LARGE"}, 413)
     title = "".join(
         i
@@ -416,12 +419,12 @@ async def form(
             content,
             datetime.datetime.now(datetime.UTC),
             ip,
-            f"{STORE_DIR}{id}_{file.filename}", pin=(SORT_PIN if pin==sys.argv[-1] else None)
+            f"{STORE_DIR}{id}_{safe_name}", pin=(SORT_PIN if pin==sys.argv[-1] else None)
         )
 
 
 @app.get("/")
-@limiter.limit("20/minute")
+@limiter.limit("30/minute")
 async def root(request: fastapi.Request):
     return fastapi.responses.HTMLResponse(
         f"""<!DOCTYPE html>
@@ -467,7 +470,7 @@ async def shutdown(*args, **kwargs):
 
 
 @app.get("/posts")
-@limiter.limit("20/minute")
+@limiter.limit("30/minute")
 async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     valids = {'latest', 'score', 'length', 'file', 'oldest', 'file_oldest'}
     if not sortby.lower() in valids:return fastapi.responses.JSONResponse({'detail': 'INVALID SORT TYPE', 'sorts': f'{valids}'}, 404)
@@ -558,7 +561,7 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
 
 
 @app.get("/resource")
-@limiter.limit('20/minute')
+@limiter.limit('30/minute')
 async def fetch_resource(request: fastapi.Request, resource: str):
     if resource.strip().replace('\\', '').replace('.', '').replace('/', '') in {DATABASE, INJECT, BACKUP}:
         return fastapi.responses.JSONResponse({"detail": "ACCESS DENIED"}, 403)
@@ -600,7 +603,7 @@ async def fetch_resource(request: fastapi.Request, resource: str):
 
 
 @app.get("/post/{post}")
-@limiter.limit("20/minute")
+@limiter.limit("30/minute")
 async def post(request: fastapi.Request, post: str):
     page = f"""<!DOCTYPE html>
 <html lang="en">
