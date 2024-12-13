@@ -65,7 +65,7 @@ async def handler(data: dict | list | tuple, t: int, clean: bool=False):
                         print(f'Flow {flow} send {dat["address"]} type data {t} on {datetime.datetime.now(datetime.UTC)} UTC.')
                 except Exception as e:
                     print(f'Error in POSTing JSON data: {str(e)}')
-                print(f'Flow {flow} finished on {datetime.datetime.utcnow()} UTC.')
+                print(f'Flow {flow} finished on {datetime.datetime.now(datetime.timezone.utc)} UTC.')
             
 def load_flows():
     global FLOWS
