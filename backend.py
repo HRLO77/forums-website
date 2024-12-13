@@ -102,6 +102,8 @@ async def make_post(
     if file is not None:
         filename = file[len(STORE_DIR):]
     c: tuple[str] = (" ".join(content.split()[:MAX_CON_LEN]), ) if shortened else (content, )
+    match = re.match(f'^@([a-zA-Z]|\\d){{{LENGTH_OF_ID}}}', title)
+    st = match.group(0) if (match is not None) else None
     if pin is None:
         return f"""
     <div>
@@ -116,7 +118,7 @@ async def make_post(
             <script src='{WEBSITE}/resource?resource=script.js'></script>
             <div>
                 <img src="{WEBSITE}/resource?resource=user.jpeg" style="height: 39px;width:39px;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
-                <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title}</p>
+                <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title if (match is None) else (f'<a href="{WEBSITE}/post/{st[1:]}" style="text-decoration:none;color:cadetblue">{st}</a>{title[LENGTH_OF_ID+1:]}')}</p>
                 <p style="margin-left: 1.4%;font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
                 <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%;cursor: pointer;" onclick="upvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↑</button>
                 <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%;cursor: pointer;" onclick="downvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↓</button>
@@ -145,7 +147,7 @@ async def make_post(
                 <script src='{WEBSITE}/resource?resource=script.js'></script>
                 <div>
                     <img src="{WEBSITE}/resource?resource=user.jpeg" style="height: 39px;width:39px;border-radius: 50%;margin-left:1.1%;margin-top:1.1%" alt='Anonymous'>
-                    <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title}</p>
+                    <p style="font-size:larger;display:inline-block;vertical-align:top;margin-left:0.725%;">{title if (match is None) else (f'<a href="{WEBSITE}/post/{st[1:]}" style="text-decoration:none;color:cadetblue>{st}</a>{title[LENGTH_OF_ID+1:]}')}</p>
                     <p style="margin-left: 1.4%;font-family:sans-serif;text-rendering:optimizeSpeed;font-size:medium;">Posted on: {date} - <a href="{WEBSITE}/post/{id}" style="text-decoration:none;color:cadetblue">ID: {id}</a></p>
                     <button style="margin-left:1.4%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%;cursor: pointer;" onclick="upvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↑</button>
                     <button style="margin-left:1.37%;color:white;background-color:#030303;border-radius:50%;border-color:cadetblue;margin-top:1.05%;cursor: pointer;" onclick="downvote('{str(id).strip()}');sleep(500);points('{str(id).strip()}', '{rand}');">↓</button>
@@ -244,7 +246,7 @@ async def raw(request: fastapi.Request):
     return fastapi.responses.JSONResponse({i[0]: [*i[1:5], *i[6:-2], len(i[-2])-len(i[-1])] for i in posts})
 
 @app.get("/new")
-@limiter.limit("30/minute")
+@limiter.limit("60/minute")
 async def new(request: fastapi.Request):
     return fastapi.responses.HTMLResponse(
         f"""
@@ -347,8 +349,10 @@ async def form(
     content = content.replace('   ', '').replace('  ', ' ')
     safe_name = ''
     if not(file is None):
-        chars = {*(string.ascii_letters+string.digits)}
-        safe_name = ''.join([i if i in chars else '_' for i in file.filename])[:64]
+        chars = {*(string.ascii_letters+string.digits+'.')}
+        
+        safe_name = ''.join([i if i in chars else '_' for i in file.filename])[:254]
+        print(file.filename, safe_name)
         contents = await file.read()
         async def is_too_big(b: bytes, name):
             '''Checks if a file is more than 5 MiB in size after gzip compression, and is a valid file.'''
@@ -513,6 +517,9 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
             <a href="{WEBSITE}/posts?sortby=file_oldest">File Oldest</a>
         </div>
     </div>
+    <div>
+    
+    </div>
 """ 
     # really fast, efficient splicing of posts for each page!
     LEN = 11
@@ -531,7 +538,7 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
         c+=1
     t=LEN-d
     del d
-    datepost = lambda post: datetime.datetime(int(post[3][:4]), int(post[3][5:7]), int(post[3][8:]))
+    #datepost = lambda post: datetime.datetime(int(post[3][:4]), int(post[3][5:7]), int(post[3][8:]))
     if sortby == 'score':
         ps, pins = sorted(ps, key=lambda post: len(post[-2]) - len(post[-1]), reverse=True), sorted(pins, key=lambda post: len(post[-2]) - len(post[-1]), reverse=True)
     elif sortby == 'length':
@@ -550,9 +557,10 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
     for p in ps:page+=await make_post(*p)
     page += f"""
     <br><br><br><br>
-        <div style="flex-direction:row;justify-content:space-evenly;align-items:center;display:flex;">
-            <a href="https://massey-tips.fly.dev/posts?sortby=latest&pgn={pgn-1}"><button style="color:white;font-size:xx-large;border-color:cadetblue;background-color:#030303;border-radius:15%">&lt;</button></a>
-            <a href="https://massey-tips.fly.dev/posts?sortby=latest&pgn={pgn+1}"><button style="color:white;font-size:xx-large;border-color:cadetblue;background-color:#030303;border-radius:15%">&gt;</button></a>
+        <div style="flex-direction:row;justify-content:space-evenly;align-items:center;display:flex;font-family:sans-serif;text-rendering:optimizeSpeed;">
+            <a href="https://massey-tips.fly.dev/posts?sortby=latest&pgn={pgn-1}"><button style="color:white;font-size:xx-large;border-color:cadetblue;background-color:#030303;border-radius:15%;cursor: pointer;">&lt;</button></a>
+            <p style="color:white;font-size:larger;">page {pgn}</p>
+            <a href="https://massey-tips.fly.dev/posts?sortby=latest&pgn={pgn+1}"><button style="color:white;font-size:xx-large;border-color:cadetblue;background-color:#030303;border-radius:15%;cursor: pointer;">&gt;</button></a>
         </div>
 </body>
 </body>
@@ -592,6 +600,7 @@ async def fetch_resource(request: fastapi.Request, resource: str):
     #{'Content-Disposition': f'attachment; filename="{name if match is None else name[6:]}'}
     try:
         if STORE_DIR in resource:
+            print(name)
             if name.split('.')[-1] in inline:
                 return fastapi.responses.StreamingResponse(stream(resource), headers={'Content-Disposition': f'inline; filename="{name if match is None else name[6:]}'})
             return fastapi.responses.StreamingResponse(stream(resource), headers={'Content-Disposition': f'attachment; filename="{name if match is None else name[6:]}'})
@@ -702,7 +711,7 @@ async def moderate(request: fastapi.Request,):
 async def moderate(request: fastapi.Request, password: str = fastapi.Form(), code: str = fastapi.Form()):
     if (password.strip()) != sys.argv[-1]:
         return fastapi.responses.JSONResponse({'detail': 'INCORRECT PASSWORD'}, 401)
-    name = f'{"".join(random.sample(3*(string.ascii_letters+string.digits), k=LENGTH_OF_ID))}.txt'
+    #name = f'{"".join(random.sample(3*(string.ascii_letters+string.digits), k=LENGTH_OF_ID))}.txt'
     code = f'{code}'.replace('\\n', '\n')
     await update_inject()
     try:
