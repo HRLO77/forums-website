@@ -188,7 +188,7 @@ async def start(*args, **kwargs):
 async def evaluate_ip(request: fastapi.Request, call_next):
     ip = await get_client_ip(request)
     if await is_blacklisted(ip):
-        return fastapi.responses.JSONResponse({"detail": "BLACKLISTED CLIENT ADDRESS"}, 403)
+        return fastapi.responses.JSONResponse({"detail": "BLACKLISTED USER"}, 403)
     else:
         return await call_next(request)
 
@@ -571,6 +571,7 @@ async def posts(request: fastapi.Request, sortby: str='latest', pgn: int=0):
 @app.get("/resource")
 @limiter.limit('30/minute')
 async def fetch_resource(request: fastapi.Request, resource: str):
+    
     if resource.strip().replace('\\', '').replace('.', '').replace('/', '') in {DATABASE, INJECT, BACKUP}:
         return fastapi.responses.JSONResponse({"detail": "ACCESS DENIED"}, 403)
     
@@ -578,7 +579,10 @@ async def fetch_resource(request: fastapi.Request, resource: str):
     if match is None:
         if '/' in resource.strip() or '\\' in resource.strip() or DATABASE in resource.strip() or INJECT in resource.strip() or BACKUP in resource.strip():
             return fastapi.responses.JSONResponse({"detail": "ACCESS DENIED"}, 403)
-
+    if (await os.path.isfile(resource)):
+        pass
+    else:
+        return fastapi.responses.JSONResponse({'detail': 'FILE NOT FOUND'}, 404)
     async def basename(file: str):
         return await asyncio.to_thread(real_os.path.basename, resource)
     name = await basename(resource)
