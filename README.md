@@ -3,6 +3,8 @@ A forums website, backend written in python, minimal data collection, with effic
 
 To change website address, change the `WEBSITE` constant in `script.js` and `backend.py`.
 
+an updated running version of this template is on [https://vmss-forums.fly.dev/posts](https://vmss-forums.fly.dev/posts)
+
 # requirements
 Install requirements with `python -m pip install -r requirements.txt`.
 
